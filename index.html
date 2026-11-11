@@ -129,6 +129,8 @@
   .stat span{color:var(--muted); font-size:13.5px; font-weight:600}
   .live-dot{display:inline-block; width:10px; height:10px; border-radius:50%; background:#22c55e; animation:pulse 2s infinite}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  #live .stats-in{grid-template-columns:1fr}
+  #live .stat b{font-size:clamp(24px,5vw,32px)}
 
   /* Allocation bars */
   .alloc{margin-bottom:16px}
@@ -267,14 +269,11 @@
   <section id="live">
     <div class="wrap">
       <h2><span class="live-dot"></span> <span data-i18n="live_h">CoinDago en vivo</span></h2>
-      <p class="lead" data-i18n="live_lead">Precio, holders y movimientos del token, actualizados en vivo.</p>
+      <p class="lead" data-i18n="live_lead">Precio del token, actualizado en vivo.</p>
       <div class="stats-in">
         <div class="stat"><b id="live-price">—</b><span data-i18n="live_price">Precio · CDAGO</span></div>
-        <div class="stat"><b id="live-holders">—</b><span data-i18n="live_holders">Holders</span></div>
-        <div class="stat"><b id="live-transfers">—</b><span data-i18n="live_transfers">Movimientos</span></div>
-        <div class="stat"><b id="live-volume">—</b><span data-i18n="live_volume">Volumen 24 h · USD</span></div>
       </div>
-      <p class="fine"><span data-i18n="live_fdv">Valor total (FDV):</span> <b id="live-fdv">—</b> · <span data-i18n="live_updated">Actualizado:</span> <span id="live-updated">—</span> · <span data-i18n="live_sources">Fuentes: GeckoTerminal y BNB Chain</span></p>
+      <p class="fine"><span data-i18n="live_updated">Actualizado:</span> <span id="live-updated">—</span> · <span data-i18n="live_sources">Fuente: GeckoTerminal</span></p>
     </div>
   </section>
 
@@ -574,10 +573,9 @@
       contract_note: "Desplegado el 8 de noviembre de 2026. Compra CDAGO solo con esta dirección oficial — cualquier otro contrato es falso.",
       stat_supply: "Suministro total · CDAGO", stat_ticker: "Símbolo", stat_network: "Red · BEP-20",
       stat_fixed: "Fijo", stat_fixed_note: "No se pueden crear monedas nuevas",
-      live_h: "CoinDago en vivo", live_lead: "Precio, holders y movimientos del token, actualizados en vivo.",
-      live_price: "Precio · CDAGO", live_holders: "Holders", live_transfers: "Movimientos",
-      live_volume: "Volumen 24 h · USD", live_fdv: "Valor total (FDV):",
-      live_updated: "Actualizado:", live_sources: "Fuentes: GeckoTerminal y BNB Chain",
+      live_h: "CoinDago en vivo", live_lead: "Precio del token, actualizado en vivo.",
+      live_price: "Precio · CDAGO",
+      live_updated: "Actualizado:", live_sources: "Fuente: GeckoTerminal",
       trade_h: "Comprar e intercambiar CDAGO",
       trade_lead: "CDAGO se compra e intercambia en PancakeSwap con el contrato oficial. Verifica siempre la dirección antes de operar.",
       trade_contract_h: "Contrato oficial", trade_pool_h: "Pool en PancakeSwap",
@@ -655,10 +653,9 @@
       contract_note: "Deployed on November 8, 2026. Only buy CDAGO with this official address — any other contract is fake.",
       stat_supply: "Total supply · CDAGO", stat_ticker: "Ticker", stat_network: "Network · BEP-20",
       stat_fixed: "Fixed", stat_fixed_note: "No new coins can be minted",
-      live_h: "CoinDago live", live_lead: "Token price, holders and transfers, updated live.",
-      live_price: "Price · CDAGO", live_holders: "Holders", live_transfers: "Transfers",
-      live_volume: "Volume 24 h · USD", live_fdv: "Fully diluted value (FDV):",
-      live_updated: "Updated:", live_sources: "Sources: GeckoTerminal and BNB Chain",
+      live_h: "CoinDago live", live_lead: "Token price, updated live.",
+      live_price: "Price · CDAGO",
+      live_updated: "Updated:", live_sources: "Source: GeckoTerminal",
       trade_h: "Buy and swap CDAGO",
       trade_lead: "CDAGO is bought and swapped on PancakeSwap using the official contract. Always verify the address before trading.",
       trade_contract_h: "Official contract", trade_pool_h: "PancakeSwap pool",
@@ -818,10 +815,6 @@
     var digits = rounded.toFixed(3).replace(".", "");
     return "$0.0" + subNum(zeros) + digits;
   }
-  function fmtUSD(n){
-    if (n == null || isNaN(n)) return "—";
-    return "$" + Number(n).toLocaleString("en-US", {minimumFractionDigits: 2, maximumFractionDigits: 2});
-  }
   function setLive(id, txt){ var el = document.getElementById(id); if (el) el.textContent = txt; }
   function setUpdated(){
     var now = new Date();
@@ -834,76 +827,12 @@
         var a = d && d.data && d.data.attributes;
         if (!a) return;
         setLive("live-price", fmtPrice(parseFloat(a.price_usd)));
-        setLive("live-fdv", a.fdv_usd ? fmtUSD(a.fdv_usd) : "—");
-        var vol = a.volume_usd && a.volume_usd.h24;
-        setLive("live-volume", vol != null ? fmtUSD(vol) : "—");
         setUpdated();
       })
       .catch(function(){});
   }
-  function sleep(ms){ return new Promise(function(res){ setTimeout(res, ms); }); }
-  function rpcCall(url, method, params){
-    return fetch(url, {method: "POST", headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({jsonrpc: "2.0", id: 1, method: method, params: params})})
-      .then(function(r){ return r.json(); })
-      .then(function(d){ if (d.error) throw new Error(d.error.message || "rpc error"); return d.result; });
-  }
-  var chainBalances = {};
-  var chainTransfers = 0;
-  var chainScannedTo = DEPLOY_BLOCK - 1;
-  var chainComplete = false;
-  function applyLogs(logs){
-    logs.forEach(function(lg){
-      var from = "0x" + lg.topics[1].slice(-40);
-      var to = "0x" + lg.topics[2].slice(-40);
-      var val = BigInt(lg.data);
-      chainBalances[from] = (chainBalances[from] || 0n) - val;
-      chainBalances[to] = (chainBalances[to] || 0n) + val;
-      chainTransfers++;
-    });
-  }
-  function countHolders(){
-    var n = 0;
-    for (var a in chainBalances){ if (chainBalances[a] > 0n) n++; }
-    return n;
-  }
-  function fetchChunk(rpc, from, to, tries){
-    return rpcCall(rpc, "eth_getLogs", [{fromBlock: "0x" + from.toString(16), toBlock: "0x" + to.toString(16), address: TOKEN_ADDR, topics: [TRANSFER_TOPIC]}])
-      .catch(function(){
-        if (tries > 0) return sleep(4000).then(function(){ return fetchChunk(rpc, from, to, tries - 1); });
-        throw new Error("chunk failed");
-      });
-  }
-  function scanChain(){
-    return rpcCall(RPCS[0], "eth_blockNumber", [])
-      .catch(function(){ return rpcCall(RPCS[1], "eth_blockNumber", []); })
-      .then(function(latestHex){
-        var latest = parseInt(latestHex, 16);
-        if (chainScannedTo >= latest) return;
-        var chunks = [];
-        var c = chainScannedTo + 1;
-        while (c <= latest){ chunks.push([c, Math.min(c + 49999, latest)]); c += 50000; }
-        var chain = Promise.resolve();
-        chunks.forEach(function(ch){
-          chain = chain.then(function(){
-            return fetchChunk(RPCS[0], ch[0], ch[1], 2)
-              .catch(function(){ return fetchChunk(RPCS[1], ch[0], ch[1], 2); })
-              .then(function(logs){ applyLogs(logs); chainScannedTo = ch[1]; })
-              .then(function(){ return sleep(1200); });
-          });
-        });
-        return chain.then(function(){
-          chainComplete = true;
-          setLive("live-holders", countHolders().toLocaleString("en-US"));
-          setLive("live-transfers", chainTransfers.toLocaleString("en-US"));
-        });
-      })
-      .catch(function(){});
-  }
   refreshPrice();
-  scanChain();
   setInterval(refreshPrice, 60000);
-  setInterval(scanChain, 300000);
 })();
 </script>
 </body>
