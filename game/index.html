@@ -64,7 +64,7 @@
   #toast.combo-big{font-size:44px}
   .piece.lifting{transform:translateY(-8px) scale(1.1);filter:drop-shadow(0 10px 12px rgba(0,0,0,.5))}
   .piece{transition:transform .15s ease,opacity .15s ease}
-  #levelOverlay{position:fixed;left:50%;top:30%;transform:translate(-50%,-50%) scale(.8);text-align:center;pointer-events:none;opacity:0;transition:opacity .25s ease,transform .25s ease;z-index:70}
+  #levelOverlay{position:fixed;left:50%;top:30%;transform:translate(-50%,-50%) scale(.8);text-align:center;pointer-events:none;opacity:0;transition:opacity .25s ease,transform .25s ease;z-index:70;width:max-content;max-width:92vw} /* v1.4.12: el aviso ocupa lo que necesita (antes se limitaba a ~180px y se partía en varias líneas) */
   #levelOverlay.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
   #levelOverlayText{font-size:44px;font-weight:900;color:#fff;text-shadow:0 0 24px rgba(34,211,238,.95),0 3px 0 rgba(0,0,0,.4)}
   #levelOverlaySub{font-size:18px;font-weight:800;color:var(--cyan);text-shadow:0 2px 0 rgba(0,0,0,.4)}
@@ -93,7 +93,7 @@
   #dragGhost .piece{gap:4px}
   #dragGhost .pcell{width:var(--gs,44px);height:var(--gs,44px)}
   /* ---------- Toast / combo ---------- */
-  #toast{position:fixed;left:50%;top:34%;transform:translate(-50%,-50%) scale(.8);font-size:34px;font-weight:900;color:#fff;text-shadow:0 0 18px rgba(34,211,238,.9),0 3px 0 rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease;z-index:60;text-align:center}
+  #toast{position:fixed;left:50%;top:34%;transform:translate(-50%,-50%) scale(.8);font-size:34px;font-weight:900;color:#fff;text-shadow:0 0 18px rgba(34,211,238,.9),0 3px 0 rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease;z-index:60;text-align:center;width:max-content;max-width:92vw} /* v1.4.12: el aviso ocupa lo que necesita (antes se limitaba a ~180px y se partía en varias líneas) */
   #toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
   #toast small{display:block;font-size:16px;color:var(--cyan)}
   /* ---------- Overlays ---------- */
@@ -101,6 +101,8 @@
   .overlay.hidden{display:none}
   .overlay .card{margin:auto;position:relative;z-index:1}
   .card{position:relative;width:min(92vw,380px);background:linear-gradient(180deg,#16215c,#0c1338);border:1px solid rgba(56,189,248,.4);border-radius:24px;padding:28px 22px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+  /* v1.4.12: en pantallas angostas la tarjeta cabe dentro del overlay: con padding 20px la tarjeta de 92vw (331px a 360px) era mas ancha que el hueco (320px) y se salia 11px por la derecha. */
+  @media (max-width:420px){.overlay{padding:12px}.card{padding:24px 16px}}
   /* v1.4.8: boton de silencio total en la esquina de la tarjeta (menu / fin de juego) */
   .mute-corner{position:absolute;top:12px;right:12px;z-index:5}
   .card img{width:120px;height:120px;border-radius:28px;box-shadow:0 0 30px rgba(34,211,238,.5)}
@@ -117,10 +119,10 @@
   .menubtn:active{transform:scale(.97)}
   .xlink{display:inline-block;margin-top:16px;color:#fff;text-decoration:none;font-weight:700;font-size:15px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:8px 18px}
   .xlink:active{transform:scale(.96)}
-  .optrow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;text-align:left}
+  .optrow{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:14px;text-align:left} /* v1.4.12: la fila envuelve: antes a 360px "Difícil" y "Dorado" se salían por la derecha */
   .optrow .optlbl{font-size:16px;font-weight:700}
-  .seg{display:flex;gap:6px}
-  .seg button{border:1px solid rgba(96,165,250,.4);background:rgba(37,99,235,.2);color:#fff;border-radius:10px;padding:8px 14px;font-size:15px;font-weight:700;cursor:pointer}
+  .seg{display:flex;gap:6px;flex:1 1 auto;min-width:0} /* v1.4.12: el grupo de botones puede ocupar su propia linea y encogerse */
+  .seg button{flex:1 1 0;min-width:0;white-space:nowrap;border:1px solid rgba(96,165,250,.4);background:rgba(37,99,235,.2);color:#fff;border-radius:10px;padding:8px 8px;font-size:14px;font-weight:700;cursor:pointer} /* v1.4.12: botones de ancho igual que se reparten la fila sin recortarse */
   .seg button.on{background:linear-gradient(135deg,#2563eb,#22d3ee);border-color:transparent}
   .tog{min-width:64px;border:1px solid rgba(96,165,250,.4);background:rgba(37,99,235,.2);color:#fff;border-radius:10px;padding:8px 12px;font-size:15px;font-weight:700;cursor:pointer}
   .tog.on{background:linear-gradient(135deg,#2563eb,#22d3ee);border-color:transparent}
@@ -130,7 +132,7 @@
   /* ---------- Iconos personalizados CoinDago ---------- */
   .ic{width:20px;height:20px;vertical-align:-4px;flex:none}
   .btn .ic{width:20px;height:20px;vertical-align:-3px}
-  .powerbtn{display:inline-flex;align-items:center;justify-content:center;gap:3px}
+  .powerbtn{display:inline-flex;align-items:center;justify-content:center;gap:2px} /* v1.4.12: "Hammer" iba al límite de ancho */
   .powerbtn .ic{width:17px;height:17px;vertical-align:-4px}
   .powerbtn .ic{filter:drop-shadow(0 2px 3px rgba(34,211,238,.55))}
   .btn .ic,.menubtn .ic,.playbtn .ic{filter:drop-shadow(0 1px 3px rgba(34,211,238,.4))}
@@ -160,7 +162,7 @@
   #hudTimer{color:#fff}
   .menucard{margin-top:16px;background:rgba(37,99,235,.2);border:1px solid rgba(56,189,248,.35);border-radius:14px;padding:12px;text-align:left}
   .menucard h3{margin:0 0 8px;font-size:15px;font-weight:800;color:#fff}
-  .statsgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:13px}
+  .statsgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:12px} /* v1.4.12: "Mejor contrarreloj" ya no se parte en 2 líneas con valores de 3 dígitos */
   .statsgrid .srow{display:flex;justify-content:space-between;gap:8px;color:var(--muted)}
   .statsgrid .srow b{color:#fff}
   .achrow{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid rgba(255,255,255,.08)}
@@ -192,6 +194,8 @@
   .tut-card #tutTitle{font-size:19px;font-weight:800;color:#fff;margin-top:4px}
   .tut-card #tutText{font-size:14px;color:var(--muted);margin-top:4px;line-height:1.45}
   .tut-card .menubtn{margin-top:10px;padding:9px 16px;font-size:15px}
+  /* v1.4.12: en el paso de completar la línea la tarjeta es compacta (sin el texto): antes tapaba la fila 0 y el hueco que hay que llenar no se veía. */
+  #tutorialScreen.tut-compact .tut-card #tutText{display:none}
   #tray.tut-glow{box-shadow:0 0 0 3px #22d3ee,0 0 26px rgba(34,211,238,.8);border-color:#22d3ee}
   #boardWrap.tut-glow #board{box-shadow:0 0 0 3px #22d3ee,0 0 26px rgba(34,211,238,.8)}
   #powerBar.tut-glow .powerbtn{box-shadow:0 0 0 3px #22d3ee,0 0 18px rgba(34,211,238,.7)}
@@ -216,7 +220,8 @@
   @keyframes bombPulse{0%,100%{box-shadow:inset 0 2px 3px rgba(255,255,255,.35),0 0 6px rgba(251,146,60,.5)}50%{box-shadow:inset 0 2px 3px rgba(255,255,255,.35),0 0 16px rgba(251,146,60,.95)}}
   /* ---------- Ruleta diaria ---------- */
   #spinWheel{width:230px;height:230px;border-radius:50%;margin:14px auto;position:relative;border:4px solid rgba(56,189,248,.6);box-shadow:0 0 26px rgba(34,211,238,.4);transition:transform 3.2s cubic-bezier(.12,.8,.08,1)}
-  .wheel-seg{position:absolute;left:50%;top:50%;width:64px;margin-left:-32px;text-align:center;font-size:11px;font-weight:800;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.7);pointer-events:none}
+  /* v1.4.12: la etiqueta cabe en su cuna de 45°: antes tenia 64px de ancho a 72px del centro (la cuna ahi mide 55px) y el texto largo se salia y se encimaba. Ahora son dos lineas cortas de 10px en una caja de 52px a 96px del centro (la cuna ahi mide 55px). */
+  .wheel-seg{position:absolute;left:50%;top:50%;width:52px;margin-left:-26px;text-align:center;font-size:10px;line-height:1.2;white-space:nowrap;font-weight:800;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.7);pointer-events:none}
   #spinPointer{width:0;height:0;border-left:12px solid transparent;border-right:12px solid transparent;border-top:20px solid #fbbf24;margin:0 auto;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5))}
   #spinResult{font-size:17px;font-weight:800;color:#22d3ee;min-height:24px;margin-top:10px}
   /* ---------- Tienda de aspectos ---------- */
@@ -313,6 +318,8 @@
   .card .menu-logo{width:132px;height:132px;border:3px solid rgba(34,211,238,.55);box-shadow:0 0 34px rgba(34,211,238,.55),0 0 0 6px rgba(10,16,48,.55)}
   /* Botón Jugar con latido suave */
   .playbtn{animation:playPulse 2.4s ease-in-out infinite}
+  .playbtn:disabled{opacity:.45;animation:none;cursor:default} /* v1.4.12: un botón deshabilitado se ve deshabilitado (antes seguía pulsando como si se pudiera tocar) */
+  .menubtn.spun{opacity:.6} /* v1.4.12: el botón Ruleta del menú marca que ya se giró hoy */
   @keyframes playPulse{0%,100%{transform:scale(1);box-shadow:0 8px 24px rgba(34,211,238,.45)}50%{transform:scale(1.03);box-shadow:0 8px 30px rgba(34,211,238,.65)}}
   /* Botones del menú: icono en pastilla + flecha a la derecha */
   .menubtn{display:flex;align-items:center;gap:10px;text-align:left}
@@ -483,7 +490,7 @@ body{background-image:url(bg-game.png);background-size:cover;background-position
   <div id="lineFlash"></div>
   <canvas id="fxCanvas"></canvas>
   <div id="levelOverlay"><div id="levelOverlayText"></div><div id="levelOverlaySub"></div></div>
-  <footer data-i18n-html="footer">Coloca las piezas, completa filas o columnas y gana CDAGO.<br>Modo infinito — ¡juega sin parar! · v1.4.11</footer>
+  <footer data-i18n-html="footer">Coloca las piezas, completa filas o columnas y gana CDAGO.<br>Modo infinito — ¡juega sin parar! · v1.4.12</footer>
 </div>
 <div id="powerFx" aria-hidden="true"></div>
 
@@ -538,7 +545,7 @@ body{background-image:url(bg-game.png);background-size:cover;background-position
     <button class="menubtn" id="btnShareImgMenu"><svg class="ic"><use href="#ic-image"/></svg><span data-i18n="shareImg">Compartir imagen</span><svg class="ic ic-arrow"><use href="#ic-arrow"/></svg></button>
     <a class="xlink" href="https://x.com/coindago" target="_blank" rel="noopener">𝕏 @coindago</a>
     <a class="xlink" href="https://t.me/+UcQpGiytK2ZlZmYx" target="_blank" rel="noopener"><svg class="ic"><use href="#ic-telegram"/></svg> Telegram</a>
-    <a class="xlink" href="https://muse.ai/s/coindago-xuxk6xqgp8xaxox0w/54hoCEOXASOEq97yRJ3s8DKY2jAA8O3dBDZOFktwxy4" target="_blank" rel="noopener"><svg class="ic"><use href="#ic-globe"/></svg> CoinDago</a>
+    <a class="xlink" href="https://coindago.com" target="_blank" rel="noopener"><svg class="ic"><use href="#ic-globe"/></svg> CoinDago</a>
     <p class="hint" data-i18n="menuHint">Sin internet · Modo infinito · Música original</p>
   </div>
 </div>
@@ -601,7 +608,7 @@ body{background-image:url(bg-game.png);background-size:cover;background-position
     <button class="menubtn" id="btnShareGameOver"><span data-i18n="share">𝕏 Compartir en X</span><svg class="ic ic-arrow"><use href="#ic-arrow"/></svg></button>
     <button class="menubtn" id="btnShareImgGameOver"><svg class="ic"><use href="#ic-image"/></svg><span data-i18n="shareImg">Compartir imagen</span><svg class="ic ic-arrow"><use href="#ic-arrow"/></svg></button>
     <a class="xlink" href="https://t.me/+UcQpGiytK2ZlZmYx" target="_blank" rel="noopener"><svg class="ic"><use href="#ic-telegram"/></svg> Telegram</a>
-    <a class="xlink" href="https://muse.ai/s/coindago-xuxk6xqgp8xaxox0w/54hoCEOXASOEq97yRJ3s8DKY2jAA8O3dBDZOFktwxy4" target="_blank" rel="noopener"><svg class="ic"><use href="#ic-globe"/></svg> CoinDago</a>
+    <a class="xlink" href="https://coindago.com" target="_blank" rel="noopener"><svg class="ic"><use href="#ic-globe"/></svg> CoinDago</a>
   </div>
 </div>
 
@@ -790,7 +797,7 @@ const $ = id => document.getElementById(id);
 const I18N = {
   es: {
     points:"Puntos", best:"Récord",
-    footer:'Coloca las piezas, completa filas o columnas y gana CDAGO.<br>Modo infinito — ¡juega sin parar! · v1.4.11',
+    footer:'Coloca las piezas, completa filas o columnas y gana CDAGO.<br>Modo infinito — ¡juega sin parar! · v1.4.12',
     menuSub:'El rompecabezas de bloques de <b style="color:#fff">CoinDago</b>.<br>Arrastra las piezas al tablero, completa líneas y gana <b style="color:#22d3ee">CDAGO</b>.',
     play:"Jugar", options:"Opciones", howTo:"Cómo jugar",
     menuHint:"Sin internet · Modo infinito · Música original",
@@ -842,6 +849,7 @@ const I18N = {
     spinAgain:"Ya giraste hoy. Vuelve mañana.", spinWin:"¡Ganaste {prize}!",
     prizeHammer:"+1 Martillo", prizeBomb:"+1 Bomba", prizeSwap:"+1 Cambio", prizeHammer2:"+2 Martillos",
     prizeCdago:"+{n} CDAGO", prizeJackpot:"+1 de cada potenciador",
+    wHammer:"×1|Martillo", wBomb:"×1|Bomba", wSwap:"×1|Cambio", wHammer2:"×2|Martillo", wCdago100:"+100|CDAGO", wCdago250:"+250|CDAGO", wCdago500:"+500|CDAGO", wJackpot:"¡TODO!|+1 c/u",
     shop:"Tienda", shopTitle:"Tienda de aspectos", balance:"Saldo",
     buy:"Comprar", equip:"Equipar", equipped:"Equipado", notEnough:"No tienes suficiente CDAGO",
     skinCoin:"Moneda", skinCoinDesc:"Cubitos dorados con estilo de moneda",
@@ -852,7 +860,7 @@ const I18N = {
   },
   en: {
     points:"Points", best:"Best",
-    footer:'Place the pieces, complete rows or columns and earn CDAGO.<br>Endless mode — play forever! · v1.4.11',
+    footer:'Place the pieces, complete rows or columns and earn CDAGO.<br>Endless mode — play forever! · v1.4.12',
     menuSub:'The CoinDago block puzzle.<br>Drag the pieces onto the board, complete lines and earn <b style="color:#22d3ee">CDAGO</b>.',
     play:"Play", options:"Options", howTo:"How to play",
     menuHint:"No internet · Endless mode · Original music",
@@ -904,6 +912,7 @@ const I18N = {
     spinAgain:"You already spun today. Come back tomorrow.", spinWin:"You won {prize}!",
     prizeHammer:"+1 Hammer", prizeBomb:"+1 Bomb", prizeSwap:"+1 Swap", prizeHammer2:"+2 Hammers",
     prizeCdago:"+{n} CDAGO", prizeJackpot:"+1 of each power-up",
+    wHammer:"×1|Hammer", wBomb:"×1|Bomb", wSwap:"×1|Swap", wHammer2:"×2|Hammer", wCdago100:"+100|CDAGO", wCdago250:"+250|CDAGO", wCdago500:"+500|CDAGO", wJackpot:"ALL!|+1 each",
     shop:"Shop", shopTitle:"Skin shop", balance:"Balance",
     buy:"Buy", equip:"Equip", equipped:"Equipped", notEnough:"Not enough CDAGO",
     skinCoin:"Coin", skinCoinDesc:"Gold coin style blocks",
@@ -1248,7 +1257,8 @@ function renderBoard(){
     /* className ya resetea todas las clases: el classList.remove de las
        13 clases dinámicas era trabajo repetido en cada celda, 832
        operaciones por render. */
-    d.innerHTML = "";
+    /* v1.4.12: solo se borra el contenido si la celda tiene hijos (rocas/bombas con SVG): antes se escribia innerHTML="" en las 64 celdas en cada render aunque la mayoria estuviera vacia. */
+    if(d.children.length) d.innerHTML = "";
     const col = state.board[r][c];
     if(col===ROCK){
       d.classList.add("rock");
@@ -1386,7 +1396,7 @@ function startDrag(e, slot){
      y el control de "no salir del tablero" usaba ese rectangulo viejo y no
      lo ocultaba sobre la barra de potenciadores. */
   refreshBoardGeom(true);
-  state.drag = {slot, shape, grabR, grabC, ok:false, r:null, c:null, rect:boardGeom.rect, cs:boardGeom.cs, lastR:null, lastC:null};
+  state.drag = {slot, shape, grabR, grabC, ok:false, r:null, c:null, rect:boardGeom.rect, cs:boardGeom.cs, lastR:null, lastC:null, lastGx:null, lastGy:null, bounds:shapeBounds(shape)}; /* v1.4.12: las medidas de la pieza se calculan una vez al levantarla, no en cada pointermove */
   try{ const pc = e.target && e.target.closest ? e.target.closest(".piece") : null; if(pc) pc.classList.add("lifting"); }catch(e){}
   /* Fantasma: se actualiza en su sitio y se posiciona ANTES de
      mostrarse, asi nunca se ve en (0,0) al levantar la pieza. */
@@ -1404,29 +1414,50 @@ function startDrag(e, slot){
 function moveDrag(e){
   const d = state.drag;
   if(!d) return;
+  /* v1.4.12: si la geometria se marco sucia (scroll/resize/viewport) desde
+     que empezo el arrastre, se relee ANTES de calcular: el rectangulo
+     cacheado al levantar la pieza podia quedar obsoleto (barra del
+     navegador, rotacion) y el fantasma salia desplazado. */
+  if(geomDirty){ refreshBoardGeom(true); d.rect = boardGeom.rect; d.cs = boardGeom.cs; geomDirty = false; }
   const cs = d.cs || cellSize();
-  const b = shapeBounds(d.shape);
-  /* v1.4.11: el agarre se mide con los huecos (gap 4px) entre celdas: antes
-     se usaba (grab+0.5)*cs y se ignoraban los huecos, asi que el fantasma
-     se desplazaba hasta 12px de donde marcaba el dedo. */
-  const gx = Math.round(e.clientX - (d.grabC*(cs+4) + cs/2)), gy = Math.round(e.clientY - (d.grabR*(cs+4) + cs/2));
-  ghostEl.style.transform = "translate3d(" + gx + "px," + gy + "px,0)";
-  /* v1.4.10: el fantasma flotante nunca se dibuja fuera del tablero:
-     antes, al arrastrar hacia abajo, la pieza cubria la barra de
-     potenciadores (tapaba "Bomb"). Si el fantasma no cabe entero
-     dentro del tablero, se oculta; la vista previa de celdas del
-     tablero (showGhost) sigue marcando el destino. Sin rectangulo
-     valido (p. ej. pruebas) se muestra como antes. */
-  const _r = d.rect;
-  let _gv = true;
-  if(_r && _r.width > 0 && _r.height > 0){
-    const _gw = b.w*cs + (b.w-1)*4, _gh = b.h*cs + (b.h-1)*4;
-    _gv = gx >= _r.left - 1 && gy >= _r.top - 1 && gx + _gw <= _r.right + 1 && gy + _gh <= _r.bottom + 1;
-  }
-  ghostEl.style.visibility = _gv ? "visible" : "hidden";
+  const b = d.bounds || shapeBounds(d.shape);
+  /* v1.4.12: el fantasma SE AJUSTA A LA REJILLA (como Block Blast). Antes
+     seguia al dedo con la celda agarrada bajo el dedo y quedaba hasta
+     media celda desplazado de las celdas marcadas en el tablero, por eso
+     "se seguia viendo mal" aunque la matematica del agarre era correcta.
+     Ahora la posicion sale de la celda destino entera (pos.r/pos.c, que
+     ya descuenta el agarre), asi el fantasma flotante y la vista previa
+     del tablero coinciden EXACTO siempre. boardCellFromPoint ya devuelve
+     la celda superior-izquierda de la pieza: NO se vuelve a sumar el agarre. */
   const pos = boardCellFromPoint(e.clientX, e.clientY, d.shape, d.grabR, d.grabC, d.rect, cs);
   const ok = canPlace(d.shape, pos.r, pos.c);
   d.ok = ok; d.r = pos.r; d.c = pos.c;
+  /* v1.4.10: el fantasma flotante nunca se dibuja fuera del tablero:
+     antes, al arrastrar hacia abajo, la pieza cubria la barra de
+     potenciadores (tapaba "Bomb"). Si la pieza ajustada no cabe entera
+     dentro del tablero, se oculta; la vista previa de celdas del
+     tablero (showGhost) sigue marcando el destino. Sin rectangulo
+     valido (p. ej. pruebas) se sigue al dedo como antes. */
+  const _r = d.rect;
+  let _gv = true, gx = 0, gy = 0;
+  if(_r && _r.width > 0 && _r.height > 0){
+    /* Origen de la pieza ajustada: borde (2px) + padding (6px) = 8px,
+       el mismo pad que usa boardCellFromPoint; el paso es cs+4 (celda + hueco). */
+    gx = Math.round(_r.left + 8 + pos.c*(cs+4));
+    gy = Math.round(_r.top + 8 + pos.r*(cs+4));
+    _gv = pos.r >= 0 && pos.c >= 0 && pos.r + b.h <= SIZE && pos.c + b.w <= SIZE;
+  } else {
+    gx = Math.round(e.clientX - (d.grabC*(cs+4) + cs/2));
+    gy = Math.round(e.clientY - (d.grabR*(cs+4) + cs/2));
+  }
+  /* v1.4.12: la posicion del fantasma solo se escribe cuando cambia la
+     celda destino (o el rectangulo): antes cada pointermove escribia
+     transform aunque el dedo no hubiera cruzado de celda. */
+  if(pos.r !== d.lastR || pos.c !== d.lastC || d.lastGx !== gx || d.lastGy !== gy){
+    d.lastGx = gx; d.lastGy = gy;
+    ghostEl.style.transform = "translate3d(" + gx + "px," + gy + "px,0)";
+    ghostEl.style.visibility = _gv ? "visible" : "hidden";
+  }
   /* v1.4.11: la vista previa de celdas solo se reescribe cuando cambia la
      celda destino: antes cada pointermove hacia classList en 16 celdas
      aunque el dedo no hubiera cruzado de celda (basura de estilo a 60Hz). */
@@ -1461,11 +1492,13 @@ function doPlace(slot, shape, r, c){
   sfxPlace();
   vibrate(15);
   renderBoard();
+  /* v1.4.12: UNA sola lectura de layout por jugada (ver arriba): se lee aqui, tras el render, y se pasa a toda la pirotecnia. */
+  const _bg = burstGeom();
   for(const [dr,dc] of shape.cells){
     const el = boardEl.children[(r+dr)*SIZE+(c+dc)];
     if(el) el.classList.add("placed-pop");
   }
-  spawnPlacementPuff(shape, r, c);
+  spawnPlacementPuff(shape, r, c, _bg);
   clearTraySlot(slot);
   updateHUD();
   const lines = fullLines();
@@ -1487,8 +1520,8 @@ function doPlace(slot, shape, r, c){
         el.classList.add("line-clear");
       }
     });
-    spawnParticles(lines, themes);
-    spawnBurst(lines, themes);
+    /* v1.4.12: la pirotecnia (particulas) se lanza en el siguiente cuadro: antes 100-300 particulas se creaban en la misma tarea que el render del tablero y la animacion de limpieza, y ese era el tiron al romper lineas. El texto flotante y los anillos se quedan en esta tarea. */
+    nextFrame(function(){ spawnParticles(lines, themes, _bg); spawnBurst(lines, themes, _bg); });
     vibrate([30,40,30]);
     const bonus = Math.round(10 * total * total * scoreMult());
     state.score += bonus;
@@ -1511,7 +1544,7 @@ function doPlace(slot, shape, r, c){
       sfxCombo();
     }
     else { sfxClear(); }
-    celebrateClear(total, themes, bonus);
+    celebrateClear(total, themes, bonus, _bg);
     updateDailyProgress("score", state.score);
     state.linesCleared += total;
     const newLevel = Math.floor(state.linesCleared/5)+1;
@@ -1723,7 +1756,7 @@ function updateSkinUI(){
 }
 function setSkin(id){
   if(!SKINS.hasOwnProperty(id)) return false;
-  if(!skinUnlocked(id)) return false;
+  if(!skinUnlocked(id)){ showToast(t("skinLocked")); return false; } /* v1.4.12: tocar un aspecto bloqueado avisa (antes no pasaba nada) */
   state.skin = id;
   saveSettings();
   updateSkinUI();
@@ -1795,7 +1828,7 @@ function updateShopUI(){
     ds.textContent = t("skin" + cap + "Desc");
     const pr = document.createElement("div");
     pr.classList.add("shop-price");
-    pr.textContent = owned ? (equipped ? t("equipped") : t("equip")) : (fmt(def.price) + " CDAGO");
+    pr.textContent = owned ? (equipped ? "" : t("equip")) : (fmt(def.price) + " CDAGO"); /* v1.4.12: "Equipado" solo en el botón (antes salía también en el precio) */
     tx.appendChild(nm); tx.appendChild(ds); tx.appendChild(pr);
     row.appendChild(tx);
     const btn = document.createElement("button");
@@ -1932,8 +1965,11 @@ function detonateBombs(queue){
   let extra = 0, detonated = 0;
   const seen = new Set();
   const q = (queue || []).slice();
-  while(q.length){
-    const k = q.shift();
+  /* v1.4.12: una sola lectura de layout para todas las bombas (antes cada bomba hacia 2 getBoundingClientRect) y puntero en vez de shift() (shift es O(n) por bomba). */
+  const _g = burstGeom();
+  let _qi = 0;
+  while(_qi < q.length){
+    const k = q[_qi++];
     if(seen.has(k)) continue;
     seen.add(k);
     const r = Math.floor(k / SIZE), c = k % SIZE;
@@ -1948,8 +1984,8 @@ function detonateBombs(queue){
         state.bombs.delete(kk);
       }
     }
-    spawnParticlesAtCell(r, c, "#fb923c");
-    spawnConfettiAtCell(r, c, ["#fb923c", "#fbbf24", "#ffffff"]);
+    spawnParticlesAtCell(r, c, "#fb923c", _g ? _g.x0 + c*_g.step : undefined, _g ? _g.y0 + r*_g.step : undefined);
+    spawnConfettiAtCell(r, c, ["#fb923c", "#fbbf24", "#ffffff"], _g ? _g.x0 + c*_g.step : undefined, _g ? _g.y0 + r*_g.step : undefined);
   }
   if(detonated){
     const bonus = Math.round(5 * extra * scoreMult());
@@ -2064,6 +2100,7 @@ function updateTutorialUI(){
   if(tray) tray.classList.toggle("tut-glow", !!(tut && tut.active && tut.step===0));
   if(bw) bw.classList.toggle("tut-glow", !!(tut && tut.active && tut.step===1));
   if(pb) pb.classList.toggle("tut-glow", !!(tut && tut.active && tut.step===2));
+  if(scr) scr.classList.toggle("tut-compact", !!(tut && tut.active && tut.step===1)); /* v1.4.12: tarjeta compacta en el paso de la línea (ver arriba) */
 }
 function rigTutorialLine(){
   for(let c=0;c<SIZE;c++) state.board[0][c] = (c<7 ? 0 : null);
@@ -2384,6 +2421,18 @@ function spinWheel(now){
   updateSpinUI();
   return {prize:prize, index:idx};
 }
+/* v1.4.12: etiqueta CORTA de la ruleta en dos lineas (valor | nombre).
+   Las etiquetas largas ("+1 de cada potenciador") no cabian en su cuna
+   de 45° y se encimaban. Las claves w* viven en i18n (ES/EN).
+   spinPrizeName() NO cambia: el premio que se anuncia y se guarda
+   sigue siendo "+1 Martillo", "+500 CDAGO", "+1 de cada potenciador". */
+function wheelLabel(prize){
+  if(!prize) return ["", ""];
+  const map = {hammer:"wHammer", bomb:"wBomb", swap:"wSwap", hammer2:"wHammer2", cdago100:"wCdago100", cdago250:"wCdago250", cdago500:"wCdago500", jackpot:"wJackpot"};
+  const s = map[prize.id] ? t(map[prize.id]) : "";
+  const parts = String(s).split("|");
+  return [parts[0] || "", parts[1] || ""];
+}
 function buildSpinWheel(){
   const wheel = $("spinWheel");
   if(!wheel) return;
@@ -2398,9 +2447,10 @@ function buildSpinWheel(){
   SPIN_PRIZES.forEach((p, i)=>{
     const lab = document.createElement("div");
     lab.classList.add("wheel-seg");
-    lab.textContent = spinPrizeName(p);
+    const wl = wheelLabel(p);
+    lab.innerHTML = wl[0] + "<br>" + wl[1];
     const ang = i*seg + seg/2;
-    lab.style.transform = "rotate(" + ang + "deg) translateY(-72px)";
+    lab.style.transform = "rotate(" + ang + "deg) translateY(-96px)";
     lab.style.transformOrigin = "50% 0";
     wheel.appendChild(lab);
   });
@@ -2443,6 +2493,8 @@ function doSpin(){
 }
 
 /* ---------- animaciones (juice) ---------- */
+/* v1.4.12: lanzar trabajo al siguiente cuadro (rAF con respaldo a setTimeout): separa la pirotecnia de la tarea de colocacion/limpieza. */
+function nextFrame(fn){ try{ if(typeof requestAnimationFrame === "function"){ requestAnimationFrame(fn); return; } }catch(e){} setTimeout(fn, 0); }
 /* Rendimiento: el canvas de efectos solo se redimensiona cuando el
    tamaño real cambia. Asignar width/height borra el canvas y fuerza
    layout: antes se hacía en CADA celda de cada línea limpiada (16
@@ -2498,7 +2550,7 @@ function spawnConfettiAtCell(r, c, colors, cx, cy){
       const rect = el.getBoundingClientRect();
       cx = rect.left + rect.width/2; cy = rect.top + rect.height/2;
     }
-    for(let i=0;i<3 && particles.length < MAX_PARTICLES;i++){
+    for(let i=0;i<2 && particles.length < MAX_PARTICLES;i++){
       const p = allocParticle();
       p.x = cx; p.y = cy; p.vx = (Math.random()-0.5)*320; p.vy = (Math.random()-1.1)*300;
       p.life = 0.8+Math.random()*0.4; p.t = 0; p.color = colors[i % colors.length]; p.size = 5+Math.random()*4;
@@ -2512,7 +2564,7 @@ function spawnConfettiAtCell(r, c, colors, cx, cy){
 function spawnSparks(cx, cy, color){
   if(!fxCtx || cx === undefined || cy === undefined) return;
   try{
-    for(let i=0;i<12 && particles.length < MAX_PARTICLES;i++){
+    for(let i=0;i<8 && particles.length < MAX_PARTICLES;i++){
       const p = allocParticle();
       const a = Math.random()*Math.PI*2, sp = 240 + Math.random()*220;
       p.x = cx; p.y = cy; p.vx = Math.cos(a)*sp; p.vy = Math.sin(a)*sp - 120;
@@ -2534,28 +2586,29 @@ function burstGeom(){
     return {step: fr.width + 4, x0: fr.left + fr.width/2, y0: fr.top + fr.height/2};
   }catch(e){ return null; }
 }
-function spawnParticles(lines, themes){
+/* v1.4.12: la geometria se pasa desde doPlace (una sola lectura de layout por jugada): antes cada funcion de la limpieza hacia su propio burstGeom() y la segunda lectura, tras tocar 32-96 celdas, forzaba otro layout entero. */
+function spawnParticles(lines, themes, g){
   if(!fxCtx) return;
   fxEnsureSize();
-  const g = burstGeom();
+  if(!g) g = burstGeom();
   const cellXY = (r, c)=> g ? [g.x0 + c*g.step, g.y0 + r*g.step] : [undefined, undefined];
   const th = themes && themes.length ? themes : lineThemes(1);
   const confettiCols = ["#ffffff", "#fde68a"];
   lines.rows.forEach((rr, ri)=>{
     const col = th[ri % th.length];
-    for(let cc=0;cc<SIZE;cc++){ const [cx, cy] = cellXY(rr, cc); spawnParticlesAtCell(rr, cc, col.main, cx, cy); spawnConfettiAtCell(rr, cc, [col.main, col.dark, ...confettiCols], cx, cy); }
+    for(let cc=0;cc<SIZE;cc++){ const [cx, cy] = cellXY(rr, cc); spawnParticlesAtCell(rr, cc, col.main, cx, cy, 6); spawnConfettiAtCell(rr, cc, [col.main, col.dark, ...confettiCols], cx, cy); }
     const [mx, my] = cellXY(rr, 3.5); spawnSparks(mx, my, col.main);
   });
   lines.cols.forEach((cc, ci)=>{
     const col = th[(lines.rows.length + ci) % th.length];
-    for(let rr=0;rr<SIZE;rr++){ const [cx, cy] = cellXY(rr, cc); spawnParticlesAtCell(rr, cc, col.main, cx, cy); spawnConfettiAtCell(rr, cc, [col.main, col.dark, ...confettiCols], cx, cy); }
+    for(let rr=0;rr<SIZE;rr++){ const [cx, cy] = cellXY(rr, cc); spawnParticlesAtCell(rr, cc, col.main, cx, cy, 6); spawnConfettiAtCell(rr, cc, [col.main, col.dark, ...confettiCols], cx, cy); }
     const [mx, my] = cellXY(3.5, cc); spawnSparks(mx, my, col.main);
   });
 }
-function spawnBurst(lines, themes){
+function spawnBurst(lines, themes, g){
   if(!fxCtx) return;
   fxEnsureSize();
-  const g = burstGeom();
+  if(!g) g = burstGeom();
   const th = themes && themes.length ? themes : lineThemes(1);
   const cells = [];
   lines.rows.forEach(rr=>cells.push([rr, Math.floor(SIZE/2)]));
@@ -2563,11 +2616,11 @@ function spawnBurst(lines, themes){
   cells.forEach(([r, c], i)=>{
     const col = th[i % th.length];
     const cx = g ? g.x0 + c*g.step : undefined, cy = g ? g.y0 + r*g.step : undefined;
-    spawnParticlesAtCell(r, c, col.main, cx, cy);
+    spawnParticlesAtCell(r, c, col.main, cx, cy, 6);
     spawnConfettiAtCell(r, c, [col.main, col.dark, "#ffffff", "#fde68a"], cx, cy);
   });
 }
-function celebrateClear(total, themes, bonus){
+function celebrateClear(total, themes, bonus, g){
   const th = (themes && themes.length ? themes[0] : LINE_COLORS[0]);
   // destello de color a pantalla completa
   const fl = $("lineFlash");
@@ -2587,7 +2640,7 @@ function celebrateClear(total, themes, bonus){
   shakeScreen(Math.min(3, total));
   if(total >= 3){
     try{
-      const _g = burstGeom();
+      const _g = g || burstGeom();
       setTimeout(()=>{ try{ spawnShockRing(3.5, 3.5, "#fbbf24", true); if(_g) spawnSparks(_g.x0 + 3.5*_g.step, _g.y0 + 3.5*_g.step, "#fbbf24"); }catch(e){} }, 130);
     }catch(e){}
   }
@@ -2689,10 +2742,10 @@ function spawnShockRing(r, c, color, big){
 }
 /* Nube pequena de particulas al colocar una pieza: 3 por celda, del
    color de la pieza, del pool. Una sola lectura de layout por jugada. */
-function spawnPlacementPuff(shape, r, c){
+function spawnPlacementPuff(shape, r, c, g){
   if(!fxCtx || !shape) return;
   try{
-    const g = burstGeom();
+    if(!g) g = burstGeom();
     if(!g) return;
     const col = (pal()[shape.color] || ["#22d3ee"])[0];
     for(const [dr, dc] of shape.cells){
@@ -2945,7 +2998,7 @@ function scheduleStep(i, t){
   }
 }
 function musicTick(){
-  if(!AC || !state.musicOn) return;
+  if(!AC || !state.musicOn || state.paused || state.over) return; /* v1.4.12: nada de musica en pausa ni en fin de juego */
   while(nextTime < AC.currentTime + 0.25){
     scheduleStep(step, nextTime);
     step = (step+1) % 32;
@@ -2976,11 +3029,12 @@ function recordedFallback(){
 function tryRecordedMusic(){
   try{
     if(typeof Audio === "undefined" || recordedFailed || !state.musicOn) return false;
+    if(typeof document !== "undefined" && document.hidden) return false; /* v1.4.12: nada de musica con la pagina oculta (igual que el sting) */
     const src = recordedTrackFor();
     if(!src) return false;
     stopSting(); /* v1.4.10: nunca dos pistas a la vez: al arrancar la musica, el sting de fin de juego se calla. */
     if(musicAudio && musicTrack === src){
-      if(musicAudio.paused){ const p = musicAudio.play(); if(p && p.catch) p.catch(function(){ recordedFallback(); }); }
+      if(musicAudio.paused){ const cur = musicAudio; const p = musicAudio.play(); if(p && p.then) p.then(function(){ if(!state.musicOn && musicAudio === cur){ releaseAudioEl(cur); } }); if(p && p.catch) p.catch(function(){ recordedFallback(); }); }
       return true;
     }
     releaseAudioEl(musicAudio);
@@ -3000,6 +3054,7 @@ function tryRecordedMusic(){
 function stopRecordedMusic(){ releaseAudioEl(musicAudio); musicAudio = null; musicTrack = ""; }
 function switchRecordedTrack(){
   if(musicTimer !== -1 || !state.musicOn || recordedFailed) return;
+  if(typeof document !== "undefined" && document.hidden) return; /* v1.4.12: nada de musica con la pagina oculta */
   const want = recordedTrackFor();
   if(musicAudio && musicTrack === want) return;
   stopSting(); /* v1.4.10: nunca dos pistas a la vez (ver tryRecordedMusic). */
@@ -3069,18 +3124,29 @@ function sfxAchievement(){ if(!state.sfxOn) return; const ac=audioCtx(); if(!ac)
 function sfxRecord(){ if(!state.sfxOn) return; const ac=audioCtx(); if(!ac) return; [392,523,659,784,1047,1319].forEach((f,i)=>tone(f, ac.currentTime+i*.11, .22, "triangle", .13)); }
 function setMusic(on){
   state.musicOn = !!on;
-  if(!state.musicOn){ stopMusic(); } else if(state.started){ startMusic(); }
+  if(!state.musicOn){ stopMusic(); } else if(state.started && !state.paused && !state.over){ startMusic(); } /* v1.4.12: nada de musica en pausa ni en fin de juego */
   saveSettings(); updateSettingsUI();
 }
 function setSfx(on){
   state.sfxOn = !!on;
   setSfxBus(state.sfxOn ? 1 : 0); /* v1.4.11: los efectos en curso se callan al instante */
-  if(!state.sfxOn) stopSting();
+  /* v1.4.12: el sting es MUSICA (tema de fin de juego), no un efecto: antes apagar los efectos mataba el tema aunque la musica estuviera encendida. stopMusic()/setMusic(false) ya lo paran. */
   saveSettings(); updateSettingsUI();
 }
+/* v1.4.12: al silenciar se guarda la mezcla (musica/efectos) y al reactivar se restaura: antes el altavoz forzaba los dos a ON y encendia la musica en pausa o en fin de juego. */
+let _preMute = null;
 function setMuted(m){ /* compatibilidad: silencia o reactiva música y efectos */
-  state.musicOn = !m; state.sfxOn = !m;
-  if(m){ setSfxBus(0); stopMusic(); } else { setSfxBus(1); if(state.started){ startMusic(); } }
+  if(m){
+    _preMute = {musicOn: state.musicOn, sfxOn: state.sfxOn};
+    state.musicOn = false; state.sfxOn = false;
+    setSfxBus(0); stopMusic();
+  } else {
+    const pm = _preMute || {musicOn:true, sfxOn:true};
+    _preMute = null;
+    state.musicOn = pm.musicOn; state.sfxOn = pm.sfxOn;
+    setSfxBus(state.sfxOn ? 1 : 0);
+    if(state.musicOn && state.started && !state.paused && !state.over){ startMusic(); }
+  }
   saveSettings(); updateSettingsUI();
 }
 function toggleMuteAll(){ /* v1.4.8: silencio total (musica + efectos) con un toque */
@@ -3164,6 +3230,17 @@ $("btnShareImgGameOver").addEventListener("click", ()=>shareRecordImage(state.sc
    se redimensiona si cambió, nunca en cada partícula. */
 if(typeof window !== "undefined" && window.addEventListener) window.addEventListener("resize", fxEnsureSize);
 if(typeof window !== "undefined" && window.addEventListener) window.addEventListener("resize", function(){ refreshBoardGeom(true); });
+/* v1.4.12: si la pagina se desplaza o el viewport cambia durante un
+   arrastre (rotacion, barra del navegador al ocultarse, teclado), la
+   geometria del tablero se marca sucia y moveDrag la relee antes de
+   calcular: con el rectangulo viejo el fantasma salia desplazado. */
+let geomDirty = false;
+function markGeomDirty(){ geomDirty = true; }
+if(typeof document !== "undefined" && document.addEventListener) document.addEventListener("scroll", markGeomDirty, true);
+if(typeof window !== "undefined" && window.addEventListener){
+  window.addEventListener("resize", markGeomDirty);
+  try{ if(window.visualViewport && window.visualViewport.addEventListener){ window.visualViewport.addEventListener("resize", markGeomDirty); window.visualViewport.addEventListener("scroll", markGeomDirty); } }catch(e){}
+}
 /* v1.4.11: al salir de la app o cambiar de pestana, TODO el audio se calla
    (musica, sting y efectos): antes la musica seguia sonando "fuera del
    juego" porque nada la paraba al ocultarse la pagina. Al volver, solo se
