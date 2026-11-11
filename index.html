@@ -23,7 +23,7 @@
   *{box-sizing:border-box}
   html{scroll-behavior:smooth}
   body{
-    margin:0; background:var(--bg); color:var(--text);
+    margin:0; overflow-x:clip; background:var(--bg); color:var(--text);
     font-family:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
     font-size:16px; line-height:1.6;
     -webkit-font-smoothing:antialiased;
@@ -57,6 +57,14 @@
     padding:8px 14px; cursor:pointer; min-height:36px;
   }
   .lang-toggle button.active{background:var(--blue); color:#fff}
+  .menu-btn{display:none; background:transparent; border:1px solid var(--line); border-radius:10px; color:var(--text); font-size:19px; line-height:1; padding:9px 12px; cursor:pointer; min-height:40px}
+  @media (max-width:759px){
+    .header-in{gap:12px}
+    .menu-btn{display:inline-flex; align-items:center; justify-content:center; margin-left:auto}
+    nav{display:none; width:100%; flex-direction:column; gap:0; margin-left:0; order:3}
+    nav.open{display:flex}
+    nav a{padding:13px 4px; border-top:1px solid var(--line); font-size:16px}
+  }
 
   /* Hero */
   .hero{padding:56px 0 8px; text-align:center}
@@ -115,8 +123,9 @@
   /* Stats */
   .stats{margin-top:44px; background:var(--panel); border-top:1px solid var(--line); border-bottom:1px solid var(--line)}
   .stats-in{display:grid; grid-template-columns:1fr 1fr; gap:22px; padding:28px 0}
-  @media (min-width:760px){.stats-in{grid-template-columns:repeat(4,1fr)}}
-  .stat b{display:block; font-family:"Sora",sans-serif; font-size:19px; font-weight:800; word-break:break-word}
+  .stat:first-child{grid-column:1 / -1}
+  @media (min-width:760px){.stats-in{grid-template-columns:repeat(4,1fr)}.stat:first-child{grid-column:auto}}
+  .stat b{display:block; font-family:"Sora",sans-serif; font-size:clamp(14px,1.9vw,19px); font-weight:800; word-break:break-word}
   .stat span{color:var(--muted); font-size:13.5px; font-weight:600}
 
   /* Allocation bars */
@@ -204,6 +213,7 @@
       <a href="#roadmap">Roadmap</a>
       <a href="#community" data-i18n="nav_community">Comunidad</a>
     </nav>
+    <button type="button" class="menu-btn" id="menu-btn" aria-expanded="false" aria-label="Menú">☰</button>
     <div class="lang-toggle" role="group" aria-label="Language / Idioma">
       <button type="button" id="btn-es">ES</button>
       <button type="button" id="btn-en">EN</button>
@@ -524,7 +534,7 @@
         </ul>
       </div>
     </div>
-    <p class="legal" data-i18n="legal">© 2026 CoinDago. CDAGO es el token del ecosistema de videojuegos CoinDago, empezando por Dago Blocks. Esta página es solo informativa; no es asesoría financiera ni una oferta de inversión. Token desplegado en BNB Chain el 8 de noviembre de 2026 · Contrato: 0x9cec82746f33c954e250ac2d17d8ebbd67731d01.</p>
+    <p class="legal" data-i18n="legal">© 2026 CoinDago — CDAGO es el token del ecosistema de videojuegos CoinDago, empezando por Dago Blocks. Esta página es solo informativa; no es asesoría financiera ni una oferta de inversión. Token desplegado en BNB Chain el 8 de noviembre de 2026 · Contrato: 0x9cec82746f33c954e250ac2d17d8ebbd67731d01.</p>
   </div>
 </footer>
 
@@ -606,7 +616,7 @@
       notice_p2: "Cualquier otro contrato, enlace o vendedor es una estafa. Verifícalo siempre en BscScan. Nada en esta página es asesoría financiera: las criptomonedas son de alto riesgo y puedes perder lo que inviertas.",
       footer_tag: "El token del ecosistema de videojuegos CoinDago, empezando por Dago Blocks.",
       footer_explore: "Explorar", footer_links: "Enlaces", footer_linkedin: "LinkedIn · Fundador",
-      legal: "© 2026 CoinDago. CDAGO es el token del ecosistema de videojuegos CoinDago, empezando por Dago Blocks. Esta página es solo informativa; no es asesoría financiera ni una oferta de inversión. Token desplegado en BNB Chain el 8 de noviembre de 2026 · Contrato: 0x9cec82746f33c954e250ac2d17d8ebbd67731d01.",
+      legal: "© 2026 CoinDago — CDAGO es el token del ecosistema de videojuegos CoinDago, empezando por Dago Blocks. Esta página es solo informativa; no es asesoría financiera ni una oferta de inversión. Token desplegado en BNB Chain el 8 de noviembre de 2026 · Contrato: 0x9cec82746f33c954e250ac2d17d8ebbd67731d01.",
       copied: "¡Copiado!"
     },
     en: {
@@ -683,7 +693,7 @@
       notice_p2: "Any other contract, link or seller is a scam. Always verify on BscScan. Nothing on this page is financial advice: cryptocurrencies are high risk and you can lose what you put in.",
       footer_tag: "The token of the CoinDago gaming ecosystem, starting with Dago Blocks.",
       footer_explore: "Explore", footer_links: "Links", footer_linkedin: "LinkedIn · Founder",
-      legal: "© 2026 CoinDago. CDAGO is the token of the CoinDago gaming ecosystem, starting with Dago Blocks. This page is informational only; it is not financial advice or an investment offer. Token deployed on BNB Chain on November 8, 2026 · Contract: 0x9cec82746f33c954e250ac2d17d8ebbd67731d01.",
+      legal: "© 2026 CoinDago — CDAGO is the token of the CoinDago gaming ecosystem, starting with Dago Blocks. This page is informational only; it is not financial advice or an investment offer. Token deployed on BNB Chain on November 8, 2026 · Contract: 0x9cec82746f33c954e250ac2d17d8ebbd67731d01.",
       copied: "Copied!"
     }
   };
@@ -750,6 +760,20 @@
     panel.classList.remove("open");
     iframe.removeAttribute("src");
   });
+
+  /* Mobile menu */
+  var menuBtn = document.getElementById("menu-btn");
+  var navEl = document.querySelector("header nav");
+  function setMenu(open){
+    navEl.classList.toggle("open", open);
+    menuBtn.setAttribute("aria-expanded", open ? "true" : "false");
+    menuBtn.textContent = open ? "\u2715" : "\u2630";
+  }
+  menuBtn.addEventListener("click", function(){ setMenu(!navEl.classList.contains("open")); });
+  var navLinks = navEl.querySelectorAll("a");
+  for (var mi = 0; mi < navLinks.length; mi++){
+    navLinks[mi].addEventListener("click", function(){ setMenu(false); });
+  }
 })();
 </script>
 </body>
