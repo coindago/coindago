@@ -260,6 +260,10 @@
   #bgBlobs .d5{left:48%;top:8%;animation-delay:-6s}
   #bgBlobs .d6{left:90%;top:44%;animation-delay:-3s}
   @keyframes dotFloat{0%,100%{transform:translate3d(0,0,0);opacity:.25}50%{transform:translate3d(0,-26px,0);opacity:.9}}
+  /* v1.4.11: al arrastrar, el fondo ambiental se congela: en telefonos baratos
+     componer 3 manchas + 6 motas en cada cuadro, encima del tablero y del
+     fantasma, era parte del tiron. Al soltar, la animacion sigue donde iba. */
+  body.dragging #bgBlobs .blob,body.dragging #bgBlobs .dot{animation-play-state:paused}
   /* Logo del menu: flota suave + el titulo brilla con un degradado que se mueve.
      (Solo el menu: no es un camino caliente del juego.) */
   .card img{animation:logoFloat 4.5s ease-in-out infinite}
@@ -278,8 +282,11 @@
   .cell.ghost{animation:ghostPulseBoard .8s ease-in-out infinite}
   @keyframes ghostPulseBoard{0%,100%{opacity:.55}50%{opacity:.95}}
   /* v1.4.9: la animacion va en la pieza INTERNA, no en el contenedor: animar transform en #dragGhost pisaba el translate3d que posiciona el fantasma y lo dejaba clavado en (0,0), arriba a la izquierda. */
+  /* v1.4.11: el pulso del fantasma flotante es SOLO opacidad: el scale(1.05)
+     hacia que las celdas se vieran mas grandes que las del tablero y, como la
+     pieza tenia filas invisibles, el centro del escalado no era el de la pieza. */
   #dragGhost.dragging .piece{animation:ghostPulse .9s ease-in-out infinite}
-  @keyframes ghostPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+  @keyframes ghostPulse{0%,100%{opacity:.85}50%{opacity:1}}
   #dragGhost .pcell{box-shadow:0 0 8px rgba(34,211,238,.45)}
   /* La bandeja entra rebotando al rellenarse */
   .piece.tray-in{animation:trayIn .45s cubic-bezier(.2,1.4,.4,1) backwards}
@@ -476,7 +483,7 @@ body{background-image:url(bg-game.png);background-size:cover;background-position
   <div id="lineFlash"></div>
   <canvas id="fxCanvas"></canvas>
   <div id="levelOverlay"><div id="levelOverlayText"></div><div id="levelOverlaySub"></div></div>
-  <footer data-i18n-html="footer">Coloca las piezas, completa filas o columnas y gana CDAGO.<br>Modo infinito — ¡juega sin parar!</footer>
+  <footer data-i18n-html="footer">Coloca las piezas, completa filas o columnas y gana CDAGO.<br>Modo infinito — ¡juega sin parar! · v1.4.11</footer>
 </div>
 <div id="powerFx" aria-hidden="true"></div>
 
@@ -783,7 +790,7 @@ const $ = id => document.getElementById(id);
 const I18N = {
   es: {
     points:"Puntos", best:"Récord",
-    footer:'Coloca las piezas, completa filas o columnas y gana CDAGO.<br>Modo infinito — ¡juega sin parar!',
+    footer:'Coloca las piezas, completa filas o columnas y gana CDAGO.<br>Modo infinito — ¡juega sin parar! · v1.4.11',
     menuSub:'El rompecabezas de bloques de <b style="color:#fff">CoinDago</b>.<br>Arrastra las piezas al tablero, completa líneas y gana <b style="color:#22d3ee">CDAGO</b>.',
     play:"Jugar", options:"Opciones", howTo:"Cómo jugar",
     menuHint:"Sin internet · Modo infinito · Música original",
@@ -845,7 +852,7 @@ const I18N = {
   },
   en: {
     points:"Points", best:"Best",
-    footer:'Place the pieces, complete rows or columns and earn CDAGO.<br>Endless mode — play forever!',
+    footer:'Place the pieces, complete rows or columns and earn CDAGO.<br>Endless mode — play forever! · v1.4.11',
     menuSub:'The CoinDago block puzzle.<br>Drag the pieces onto the board, complete lines and earn <b style="color:#22d3ee">CDAGO</b>.',
     play:"Play", options:"Options", howTo:"How to play",
     menuHint:"No internet · Endless mode · Original music",
@@ -982,6 +989,7 @@ const boardEl = $("board"), trayEl = $("tray"), ghostEl = $("dragGhost"), toastE
 const fxCanvas = $("fxCanvas");
 let fxCtx = null;
 try{ fxCtx = (fxCanvas && fxCanvas.getContext) ? fxCanvas.getContext("2d") : null; }catch(e){ fxCtx = null; }
+try{ if(fxCanvas) fxCanvas.style.display = "none"; }catch(e){} /* v1.4.11: el canvas de efectos es una capa de pantalla completa: mientras no hay particulas no se compone (se vuelve a mostrar al lanzar la primera). */
 let particles = [], fxRunning = false;
 
 function loadBest(){
@@ -1196,13 +1204,21 @@ function placeRocks(){
    parte del tiron al levantar la pieza. El tablero solo cambia de
    tamano al rotar o redimensionar, asi que se lee una vez y se
    refresca en renderBoard() y en resize. */
+/* v1.4.11: la celda se mide del DOM (offsetWidth = ancho real con borde,
+   sin transformaciones): la formula anterior restaba solo el padding y se
+   olvidaba del borde de 2px del tablero, asi que el fantasma salia ~0.5px
+   por celda mas grande y desalineado. Si la medida no es fiable (pruebas),
+   se usa la formula corregida (borde 2px + padding 6px por lado + 7 huecos). */
 let boardGeom = {rect:null, cs:44};
 function refreshBoardGeom(force){
   try{
     if(!force && boardGeom.rect) return;
     const r = boardEl.getBoundingClientRect();
     boardGeom.rect = r;
-    boardGeom.cs = r.width ? (r.width - 12 - 7*4) / 8 : 44;
+    let cs = r.width ? (r.width - 16 - 7*4) / 8 : 44;
+    const ow = boardCells && boardCells[0] ? boardCells[0].offsetWidth : 0;
+    if(ow > 5 && r.width && ow < r.width/4) cs = ow;
+    boardGeom.cs = cs || 44;
   }catch(e){}
 }
 function cellSize(){
@@ -1306,7 +1322,7 @@ function showGhost(r0, c0, shape, ok){
 function boardCellFromPoint(x, y, shape, grabR, grabC, rect, cs){
   rect = rect || boardEl.getBoundingClientRect();
   cs = (cs || cellSize()) + 4; // celda + gap
-  const pad = 6;
+  const pad = 8; // v1.4.11: borde (2px) + padding (6px) del tablero
   const col = Math.floor((x - rect.left - pad) / cs);
   const row = Math.floor((y - rect.top - pad) / cs);
   return {r: row - grabR, c: col - grabC};
@@ -1339,7 +1355,14 @@ function updateGhostPiece(shape){
   for(let i=0;i<16;i++){
     const r = Math.floor(i/4), c = i%4;
     const cell = ghostPool[i];
-    const filled = r < b.h && c < b.w && shape.cells.some(([sr,sc])=>sr===r&&sc===c);
+    const inGrid = r < b.h && c < b.w;
+    const filled = inGrid && shape.cells.some(([sr,sc])=>sr===r&&sc===c);
+    /* v1.4.11: las celdas del pool fuera de la pieza se ocultan (display:none)
+       en vez de quedar transparentes: antes la pieza fantasma media hasta 6
+       filas de alto (las invisibles estiraban su caja) y el pulso escalaba
+       alrededor del centro equivocado. Con display:none la rejilla solo
+       coloca las celdas de la pieza. */
+    cell.style.display = inGrid ? "" : "none";
     cell.className = "pcell" + (filled ? "" : " empty");
     if(filled){
       cell.style.setProperty("--c1", pcol[0]);
@@ -1356,8 +1379,14 @@ function startDrag(e, slot){
   const target = e.target.closest(".pcell");
   const grabR = target ? parseInt(target.dataset.r||"0",10) : 0;
   const grabC = target ? parseInt(target.dataset.c||"0",10) : 0;
-  /* Geometria cacheada: cero lecturas de layout al levantar la pieza. */
-  state.drag = {slot, shape, grabR, grabC, ok:false, r:null, c:null, rect:boardGeom.rect, cs:boardGeom.cs};
+  /* v1.4.11: geometria FRESCA al levantar la pieza (una sola lectura de
+     layout por arrastre, no por movimiento): la geometria cacheada en el
+     primer render podia quedar obsoleta si el WebView se asento despues
+     (tamano inicial distinto), y el fantasma salia mas grande y desalineado,
+     y el control de "no salir del tablero" usaba ese rectangulo viejo y no
+     lo ocultaba sobre la barra de potenciadores. */
+  refreshBoardGeom(true);
+  state.drag = {slot, shape, grabR, grabC, ok:false, r:null, c:null, rect:boardGeom.rect, cs:boardGeom.cs, lastR:null, lastC:null};
   try{ const pc = e.target && e.target.closest ? e.target.closest(".piece") : null; if(pc) pc.classList.add("lifting"); }catch(e){}
   /* Fantasma: se actualiza en su sitio y se posiciona ANTES de
      mostrarse, asi nunca se ve en (0,0) al levantar la pieza. */
@@ -1366,6 +1395,7 @@ function startDrag(e, slot){
   ghostEl.style.display = "block";
   moveDrag(e); /* v1.4.10: moveDrag posiciona Y decide la visibilidad del fantasma (nunca fuera del tablero). */
   ghostEl.classList.add("dragging");
+  try{ document.body.classList.add("dragging"); }catch(e){} /* v1.4.11: congela el fondo ambiental mientras se arrastra */
   document.addEventListener("pointermove", moveDrag);
   document.addEventListener("pointerup", endDrag, {once:true});
   document.addEventListener("pointercancel", endDrag, {once:true});
@@ -1376,7 +1406,10 @@ function moveDrag(e){
   if(!d) return;
   const cs = d.cs || cellSize();
   const b = shapeBounds(d.shape);
-  const gx = Math.round(e.clientX - (d.grabC+0.5)*cs), gy = Math.round(e.clientY - (d.grabR+0.5)*cs);
+  /* v1.4.11: el agarre se mide con los huecos (gap 4px) entre celdas: antes
+     se usaba (grab+0.5)*cs y se ignoraban los huecos, asi que el fantasma
+     se desplazaba hasta 12px de donde marcaba el dedo. */
+  const gx = Math.round(e.clientX - (d.grabC*(cs+4) + cs/2)), gy = Math.round(e.clientY - (d.grabR*(cs+4) + cs/2));
   ghostEl.style.transform = "translate3d(" + gx + "px," + gy + "px,0)";
   /* v1.4.10: el fantasma flotante nunca se dibuja fuera del tablero:
      antes, al arrastrar hacia abajo, la pieza cubria la barra de
@@ -1394,7 +1427,10 @@ function moveDrag(e){
   const pos = boardCellFromPoint(e.clientX, e.clientY, d.shape, d.grabR, d.grabC, d.rect, cs);
   const ok = canPlace(d.shape, pos.r, pos.c);
   d.ok = ok; d.r = pos.r; d.c = pos.c;
-  showGhost(pos.r, pos.c, d.shape, ok);
+  /* v1.4.11: la vista previa de celdas solo se reescribe cuando cambia la
+     celda destino: antes cada pointermove hacia classList en 16 celdas
+     aunque el dedo no hubiera cruzado de celda (basura de estilo a 60Hz). */
+  if(pos.r !== d.lastR || pos.c !== d.lastC){ d.lastR = pos.r; d.lastC = pos.c; showGhost(pos.r, pos.c, d.shape, ok); }
 }
 function endDrag(){
   document.removeEventListener("pointermove", moveDrag);
@@ -1404,6 +1440,7 @@ function endDrag(){
   ghostEl.style.visibility = "hidden";
   ghostEl.style.transform = "translate3d(-9999px,-9999px,0)";
   ghostEl.classList.remove("dragging");
+  try{ document.body.classList.remove("dragging"); }catch(e){}
   showGhost(null);
   if(!d) return;
   if(state.paused){ renderTray(); return; }
@@ -2573,6 +2610,7 @@ function celebrateClear(total, themes, bonus){
 }
 function fxLoop(){
   fxRunning = true;
+  try{ if(fxCanvas) fxCanvas.style.display = "block"; }catch(e){}
   let last = 0;
   const stepFx = (now)=>{
     if(!fxCtx){ fxRunning = false; return; }
@@ -2592,7 +2630,7 @@ function fxLoop(){
           particles.pop();
         }
       }
-      if(!particles.length){ fxRunning = false; return; }
+      if(!particles.length){ fxRunning = false; try{ if(fxCanvas) fxCanvas.style.display = "none"; }catch(e){} return; }
       for(const p of particles){
         p.t += dt; p.x += p.vx*dt; p.y += p.vy*dt; p.vy += 300*dt;
         if(p.rect) p.rot = (p.rot || 0) + (p.vr || 0)*dt;
@@ -2820,6 +2858,26 @@ function audioCtx(){
   if(AC.state === "suspended") AC.resume();
   return AC;
 }
+/* v1.4.11: buses de ganancia para el audio WebAudio. Antes no habia forma
+   de callar al instante las notas ya programadas (musicTick programa 0.25s
+   por delante): al silenciar, la melodia seguia sonando ese rato, y los
+   efectos no tenian corte. La musica del sintetizador va por musicBus y los
+   efectos por sfxBus; a 0 el sonido se corta en el acto sin tocar el resto. */
+let _musicBus = null, _sfxBus = null;
+function _makeBus(on){
+  try{
+    if(!AC || typeof AC.createGain !== "function") return null;
+    const g = AC.createGain();
+    try{ g.gain.value = on ? 1 : 0; }catch(e){}
+    try{ g.connect(AC.destination); }catch(e){}
+    return g;
+  }catch(e){ return null; }
+}
+function musicBus(){ if(!_musicBus) _musicBus = _makeBus(state.musicOn); return _musicBus; }
+function sfxBus(){ if(!_sfxBus) _sfxBus = _makeBus(state.sfxOn); return _sfxBus; }
+function _setBusGain(bus, v){ try{ if(bus && bus.gain) bus.gain.value = v ? 1 : 0; }catch(e){} }
+function setMusicBus(v){ _setBusGain(_musicBus, v); }
+function setSfxBus(v){ _setBusGain(_sfxBus, v); }
 function tone(freq, t, dur, type, vol, dest){
   const ac = AC; if(!ac) return;
   const o = ac.createOscillator(), g = ac.createGain();
@@ -2827,7 +2885,7 @@ function tone(freq, t, dur, type, vol, dest){
   g.gain.setValueAtTime(0.0001, t);
   g.gain.exponentialRampToValueAtTime(vol, t+0.02);
   g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
-  o.connect(g); g.connect(dest || ac.destination);
+  o.connect(g); g.connect(dest || sfxBus() || ac.destination);
   o.start(t); o.stop(t+dur+0.05);
 }
 function toneSweep(f0, f1, t, dur, type, vol, dest){
@@ -2839,7 +2897,7 @@ function toneSweep(f0, f1, t, dur, type, vol, dest){
   g.gain.setValueAtTime(0.0001, t);
   g.gain.exponentialRampToValueAtTime(vol, t+0.02);
   g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
-  o.connect(g); g.connect(dest || ac.destination);
+  o.connect(g); g.connect(dest || sfxBus() || ac.destination);
   o.start(t); o.stop(t+dur+0.05);
 }
 /* Ruido reutilizable: antes cada efecto creaba un AudioBuffer nuevo
@@ -2867,23 +2925,23 @@ function noiseBurst(t, dur, filterType, f0, f1, vol){
   const g = ac.createGain();
   g.gain.setValueAtTime(vol || .2, t);
   g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
-  src.connect(flt); flt.connect(g); g.connect(ac.destination);
+  src.connect(flt); flt.connect(g); g.connect(sfxBus() || ac.destination);
   src.start(t, 0, dur); src.stop(t+dur+0.02);
 }
 function scheduleStep(i, t){
   const sd = stepDur(), inten = musicIntensity();
   const m = MELODY[i % MELODY.length];
   if(m){
-    tone(m, t, sd*0.9, "triangle", 0.055);
-    if(inten >= 1) tone(m*1.5, t, sd*0.9, "sine", 0.03); // armonía (quinta) desde nivel 3
+    tone(m, t, sd*0.9, "triangle", 0.055, musicBus());
+    if(inten >= 1) tone(m*1.5, t, sd*0.9, "sine", 0.03, musicBus()); // armonía (quinta) desde nivel 3
   }
   const b = BASS[i % BASS.length];
-  if(b) tone(b, t, sd*1.8, "sine", 0.075);
+  if(b) tone(b, t, sd*1.8, "sine", 0.075, musicBus());
   if(i % 4 === 2){ // "hat" suave con ruido filtrado -> osc aguda muy corta
-    tone(6000, t, 0.03, "square", 0.008);
+    tone(6000, t, 0.03, "square", 0.008, musicBus());
   }
   if(inten >= 2 && i % 2 === 0){ // hat extra desde nivel 5
-    tone(6000, t, 0.02, "square", 0.006);
+    tone(6000, t, 0.02, "square", 0.006, musicBus());
   }
 }
 function musicTick(){
@@ -2904,11 +2962,16 @@ const REC_MENU = "music-menu.mp3";
 const REC_GAME = "music-game.mp3";
 const REC_OVER = "music-over.mp3";
 let musicAudio = null, musicTrack = "", recordedFailed = false, stingAudio = null;
-function stopSting(){ if(stingAudio){ try{ stingAudio.pause(); }catch(e){} stingAudio = null; } }
+/* v1.4.11: liberar un <audio> es pausarlo Y soltar su src: antes la
+   referencia quedaba viva (el MP3 decodificado seguia en memoria) y
+   recordedFallback soltaba la pista sin pausarla, dejandola huerfana y
+   sonando sin forma de callarla. */
+function releaseAudioEl(a){ if(!a) return; try{ a.pause(); }catch(e){} try{ a.removeAttribute("src"); }catch(e){} try{ a.load(); }catch(e){} }
+function stopSting(){ releaseAudioEl(stingAudio); stingAudio = null; }
 function recordedTrackFor(){ return state.started ? REC_GAME : REC_MENU; }
 function recordedFallback(){
   recordedFailed = true;
-  if(musicTimer === -1){ musicTimer = null; musicAudio = null; musicTrack = ""; startMusic(); }
+  if(musicTimer === -1){ releaseAudioEl(musicAudio); musicTimer = null; musicAudio = null; musicTrack = ""; startMusic(); }
 }
 function tryRecordedMusic(){
   try{
@@ -2920,29 +2983,34 @@ function tryRecordedMusic(){
       if(musicAudio.paused){ const p = musicAudio.play(); if(p && p.catch) p.catch(function(){ recordedFallback(); }); }
       return true;
     }
-    if(musicAudio){ try{ musicAudio.pause(); }catch(e){} }
+    releaseAudioEl(musicAudio);
     const a = new Audio(src);
     a.loop = true; a.volume = 0.5; a.preload = "auto";
     a.addEventListener("error", function(){ recordedFallback(); });
     musicAudio = a; musicTrack = src;
     const p = a.play();
+    /* v1.4.11: si el usuario silencio (o cambio de pista) mientras el play()
+       todavia estaba pendiente, el audio arrancaba igual al resolverse: al
+       resolverse se vuelve a comprobar el estado y se calla si ya no toca. */
+    if(p && p.then) p.then(function(){ if(!state.musicOn || musicAudio !== a){ releaseAudioEl(a); } });
     if(p && p.catch) p.catch(function(){ recordedFallback(); });
     return true;
   }catch(e){ return false; }
 }
-function stopRecordedMusic(){ if(musicAudio){ try{ musicAudio.pause(); }catch(e){} } }
+function stopRecordedMusic(){ releaseAudioEl(musicAudio); musicAudio = null; musicTrack = ""; }
 function switchRecordedTrack(){
   if(musicTimer !== -1 || !state.musicOn || recordedFailed) return;
   const want = recordedTrackFor();
   if(musicAudio && musicTrack === want) return;
   stopSting(); /* v1.4.10: nunca dos pistas a la vez (ver tryRecordedMusic). */
   try{
-    if(musicAudio){ try{ musicAudio.pause(); }catch(e){} }
+    releaseAudioEl(musicAudio);
     const a = new Audio(want);
     a.loop = true; a.volume = 0.5; a.preload = "auto";
     a.addEventListener("error", function(){ recordedFallback(); });
     musicAudio = a; musicTrack = want;
     const p = a.play();
+    if(p && p.then) p.then(function(){ if(!state.musicOn || musicAudio !== a){ releaseAudioEl(a); } });
     if(p && p.catch) p.catch(function(){ recordedFallback(); });
   }catch(e){}
 }
@@ -2952,11 +3020,13 @@ function playRecordedSting(){
        antes solo se miraba sfxOn, asi que con la musica apagada desde el
        altavoz del encabezado el tema sonaba igual en cada derrota. */
     if(typeof Audio === "undefined" || recordedFailed || !REC_OVER || !state.musicOn) return false;
+    if(typeof document !== "undefined" && document.hidden) return false; /* v1.4.11: nada de musica con la pagina oculta */
     stopSting(); /* v1.4.8: nunca dejar un sting anterior huerfano sonando */
     const a = new Audio(REC_OVER);
     stingAudio = a;
     a.volume = 0.6;
     const p = a.play();
+    if(p && p.then) p.then(function(){ if(!state.musicOn || stingAudio !== a){ releaseAudioEl(a); } });
     if(p && p.catch) p.catch(function(){});
     return true;
   }catch(e){ return false; }
@@ -2965,12 +3035,16 @@ function playRecordedSting(){
 function startMusic(){
   if(!state.musicOn) return;
   if(musicTimer) return;
+  setMusicBus(1); /* v1.4.11: reabrir el bus de musica (stopMusic lo cierra) */
   if(tryRecordedMusic()){ musicTimer = -1; return; }
   const ac = audioCtx(); if(!ac) return;
   step = 0; nextTime = ac.currentTime + 0.1;
   musicTimer = setInterval(musicTick, 100);
 }
-function stopMusic(){ if(musicTimer && musicTimer !== -1) clearInterval(musicTimer); stopRecordedMusic(); stopSting(); musicTimer=null; }
+/* v1.4.11: parar la musica corta TODO al instante: intervalo del
+   sintetizador, pista grabada, sting, y el bus de ganancia (las notas ya
+   programadas se callan en el acto en vez de sonar 0.25s mas). */
+function stopMusic(){ if(musicTimer && musicTimer !== -1) clearInterval(musicTimer); setMusicBus(0); stopRecordedMusic(); stopSting(); musicTimer=null; }
 function sfxPlace(){ if(!state.sfxOn) return; const ac=audioCtx(); if(!ac) return; tone(520, ac.currentTime, .09, "sine", .12); tone(780, ac.currentTime+.05, .09, "sine", .10); }
 function sfxClear(){ if(!state.sfxOn) return; const ac=audioCtx(); if(!ac) return; [523,659,784].forEach((f,i)=>tone(f, ac.currentTime+i*.06, .12, "triangle", .12)); }
 function sfxCombo(){ if(!state.sfxOn) return; const ac=audioCtx(); if(!ac) return; [523,659,784,1047,1319].forEach((f,i)=>tone(f, ac.currentTime+i*.05, .12, "triangle", .13)); }
@@ -3000,12 +3074,13 @@ function setMusic(on){
 }
 function setSfx(on){
   state.sfxOn = !!on;
+  setSfxBus(state.sfxOn ? 1 : 0); /* v1.4.11: los efectos en curso se callan al instante */
   if(!state.sfxOn) stopSting();
   saveSettings(); updateSettingsUI();
 }
 function setMuted(m){ /* compatibilidad: silencia o reactiva música y efectos */
   state.musicOn = !m; state.sfxOn = !m;
-  if(m){ stopMusic(); } else if(state.started){ startMusic(); }
+  if(m){ setSfxBus(0); stopMusic(); } else { setSfxBus(1); if(state.started){ startMusic(); } }
   saveSettings(); updateSettingsUI();
 }
 function toggleMuteAll(){ /* v1.4.8: silencio total (musica + efectos) con un toque */
@@ -3055,7 +3130,7 @@ function buildMenuBg(){
 $("btnPlay").addEventListener("click", ()=>{ audioCtx(); startMusic(); if(!tutorialDone()) startTutorial(); else newGame(); });
 $("btnAgain").addEventListener("click", ()=>{ audioCtx(); startMusic(); newGame(); });
 $("btnRestart").addEventListener("click", ()=>{ if(state.started && !state.busy){ newGame(); } });
-$("btnSound").addEventListener("click", ()=> setMusic(!state.musicOn));
+$("btnSound").addEventListener("click", ()=> toggleMuteAll()); /* v1.4.11: el altavoz del encabezado es silencio TOTAL (musica + efectos): antes solo apagaba la musica y los efectos seguian sonando, por eso "la quito y aun asi sigue sonando". Los ajustes finos siguen en Opciones (Musica / Efectos por separado). */
 $("btnSoundMenu").addEventListener("click", ()=> toggleMuteAll());
 $("btnSoundOver").addEventListener("click", ()=> toggleMuteAll());
 $("btnOptions").addEventListener("click", ()=>{ $("optionsScreen").classList.remove("hidden"); });
@@ -3089,6 +3164,29 @@ $("btnShareImgGameOver").addEventListener("click", ()=>shareRecordImage(state.sc
    se redimensiona si cambió, nunca en cada partícula. */
 if(typeof window !== "undefined" && window.addEventListener) window.addEventListener("resize", fxEnsureSize);
 if(typeof window !== "undefined" && window.addEventListener) window.addEventListener("resize", function(){ refreshBoardGeom(true); });
+/* v1.4.11: al salir de la app o cambiar de pestana, TODO el audio se calla
+   (musica, sting y efectos): antes la musica seguia sonando "fuera del
+   juego" porque nada la paraba al ocultarse la pagina. Al volver, solo se
+   reanuda si estaba sonando. */
+let _audioWasPlaying = false;
+function silenceForHidden(){
+  try{
+    _audioWasPlaying = musicTimer !== null;
+    setSfxBus(0);
+    stopMusic();
+    if(AC && typeof AC.suspend === "function"){ try{ const pr = AC.suspend(); if(pr && pr.catch) pr.catch(function(){}); }catch(e){} }
+  }catch(e){}
+}
+function resumeForVisible(){
+  try{
+    if(AC && (state.musicOn || state.sfxOn) && typeof AC.resume === "function"){ try{ const pr = AC.resume(); if(pr && pr.catch) pr.catch(function(){}); }catch(e){} }
+    setSfxBus(state.sfxOn ? 1 : 0);
+    if(_audioWasPlaying && state.musicOn && !state.paused && !state.over) startMusic();
+    _audioWasPlaying = false;
+  }catch(e){}
+}
+if(typeof document !== "undefined" && document.addEventListener) document.addEventListener("visibilitychange", function(){ try{ if(document.hidden){ silenceForHidden(); } else { resumeForVisible(); } }catch(e){} });
+if(typeof window !== "undefined" && window.addEventListener) window.addEventListener("pagehide", function(){ try{ silenceForHidden(); }catch(e){} });
 [["menuDiffEasy","easy"],["menuDiffNormal","normal"],["menuDiffHard","hard"],
  ["optDiffEasy","easy"],["optDiffNormal","normal"],["optDiffHard","hard"]].forEach(([id, d])=>{
   const el = $(id); if(el) el.addEventListener("click", ()=>setDifficulty(d));
