@@ -35,7 +35,7 @@
   /* ---------- Board ---------- */
   #boardWrap{position:relative;margin-top:12px;touch-action:none}
   #board{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;background:rgba(10,16,48,.85);border:2px solid rgba(56,189,248,.35);border-radius:16px;padding:6px;width:min(92vw,420px);box-shadow:0 10px 30px rgba(0,0,0,.5), inset 0 0 30px rgba(37,99,235,.15)}
-  .cell{aspect-ratio:1;border-radius:6px;background:rgba(56,130,246,.10);border:1px solid rgba(56,130,246,.12);transition:transform .12s ease, opacity .2s ease}
+  .cell{position:relative;aspect-ratio:1;border-radius:6px;background:rgba(56,130,246,.10);border:1px solid rgba(56,130,246,.12);transition:transform .12s ease, opacity .2s ease} /* v1.4.13: position:relative (el brillo ::before de las celdas llenas se posicionaba respecto a #boardWrap y se apilaba arriba del tablero; ahora cada celda lleva su brillo como se diseno, y el halo de bomba puede anclarse a la celda) */
   .cell.filled{background:linear-gradient(135deg,var(--c1,#2563eb),var(--c2,#22d3ee));border-color:rgba(255,255,255,.25);box-shadow:inset 0 2px 3px rgba(255,255,255,.35), inset 0 -2px 4px rgba(0,0,0,.25)}
   .cell.ghost{background:linear-gradient(135deg,rgba(37,99,235,.55),rgba(34,211,238,.55));border-color:rgba(255,255,255,.6);transform:scale(.94)}
   .cell.ghost-bad{background:rgba(239,68,68,.45);border-color:rgba(239,68,68,.8)}
@@ -141,11 +141,11 @@
   .cell.rock svg{width:22px;height:22px}
   /* ---------- Animaciones por potenciador ---------- */
   .cell.hammer-hit{animation:hammerHit .45s ease}
-  @keyframes hammerHit{0%{transform:scale(1);filter:brightness(1)}25%{transform:scale(.7);filter:brightness(2.2)}60%{transform:scale(1.12);filter:brightness(1.4)}100%{transform:scale(1);filter:brightness(1)}}
+  @keyframes hammerHit{0%{transform:scale(1);opacity:1}25%{transform:scale(.7);opacity:.55}60%{transform:scale(1.12);opacity:.9}100%{transform:scale(1);opacity:1}} /* v1.4.13: sin filter:brightness() (repintaba la celda en cada cuadro); el destello ahora es un bajon de opacidad */
   .cell.bomb-hit{animation:bombHit .55s ease}
-  @keyframes bombHit{0%{transform:scale(1);filter:brightness(1)}30%{transform:scale(1.28);filter:brightness(2.6) saturate(1.6)}100%{transform:scale(1);filter:brightness(1)}}
-  .cell.hint-glow{animation:hintGlow 2s ease}
-  @keyframes hintGlow{0%,100%{box-shadow:0 0 0 rgba(34,211,238,0)}20%,60%{box-shadow:0 0 16px 4px rgba(34,211,238,.9);border-color:#fff}40%,80%{box-shadow:0 0 8px 2px rgba(34,211,238,.5)}}
+  @keyframes bombHit{0%{transform:scale(1);opacity:1}30%{transform:scale(1.28);opacity:.6}100%{transform:scale(1);opacity:1}} /* v1.4.13: sin filter:brightness() saturate() (repintaba la celda en cada cuadro) */
+  .cell.hint-glow{animation:hintGlow 2s ease;box-shadow:0 0 16px 4px rgba(34,211,238,.9);border-color:#fff} /* v1.4.13: el brillo es estatico (un solo repintado al poner la clase); lo que pulsa es la escala, que compone la GPU */
+  @keyframes hintGlow{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
   #tray.swapping .piece{animation:traySwap .5s ease}
   @keyframes traySwap{0%{transform:scale(1) rotate(0deg);opacity:1}50%{transform:scale(.4) rotate(180deg);opacity:0}100%{transform:scale(1) rotate(360deg);opacity:1}}
   .powerbtn.fx-hammer{animation:btnSwing .5s ease}
@@ -155,9 +155,9 @@
   .powerbtn.fx-swap{animation:btnSpin .5s ease}
   @keyframes btnSpin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
   .powerbtn.fx-hint{animation:btnPing .6s ease}
-  @keyframes btnPing{0%,100%{box-shadow:0 0 0 rgba(34,211,238,0)}50%{box-shadow:0 0 18px 5px rgba(34,211,238,.8)}}
+  @keyframes btnPing{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.12);opacity:.85}} /* v1.4.13: sin box-shadow animado (repintaba el boton en cada cuadro del pulso de 0.6s); el brillo estatico del boton queda, el pulso es escala+opacidad */
   #boardWrap.bomb-flash{animation:bombFlash .5s ease}
-  @keyframes bombFlash{0%{filter:brightness(1)}30%{filter:brightness(1.8)}100%{filter:brightness(1)}}
+  @keyframes bombFlash{0%{transform:scale(1);opacity:1}30%{transform:scale(1.015);opacity:.92}100%{transform:scale(1);opacity:1}} /* v1.4.13: sin filter:brightness() (repintaba TODO el tablero en cada cuadro durante 0.5s); el destello luminoso va por #lineFlash y esto es solo un leve latido, transform+opacidad */
   /* ---------- Logros / estadísticas / modos / aspectos ---------- */
   #hudTimer{color:#fff}
   .menucard{margin-top:16px;background:rgba(37,99,235,.2);border:1px solid rgba(56,189,248,.35);border-radius:14px;padding:12px;text-align:left}
@@ -213,11 +213,13 @@
   #toast.clear-banner{animation:bannerPop .5s ease}
   @keyframes bannerPop{0%{transform:translate(-50%,-50%) scale(.6)}40%{transform:translate(-50%,-50%) scale(1.18)}100%{transform:translate(-50%,-50%) scale(1)}}
   /* ---------- Bloques bomba ---------- */
-  .cell.bomb-cell{display:flex;align-items:center;justify-content:center;animation:bombPulse 1.2s ease-in-out infinite}
+  .cell.bomb-cell{display:flex;align-items:center;justify-content:center}
   .cell.bomb-cell svg{width:26px;height:26px}
   .pcell.bomb-cell{display:flex;align-items:center;justify-content:center}
   .pcell.bomb-cell svg{width:16px;height:16px}
-  @keyframes bombPulse{0%,100%{box-shadow:inset 0 2px 3px rgba(255,255,255,.35),0 0 6px rgba(251,146,60,.5)}50%{box-shadow:inset 0 2px 3px rgba(255,255,255,.35),0 0 16px rgba(251,146,60,.95)}}
+  /* v1.4.13: el halo de la bomba pulsa por OPACIDAD (lo compone la GPU). Antes bombPulse animaba box-shadow y repintaba cada celda bomba en cada cuadro, siempre encendido, durante todo el juego. El brillo estatico queda en la celda; el ::after lleva el halo. */
+  .cell.bomb-cell::after{content:"";position:absolute;inset:-3px;border-radius:9px;background:radial-gradient(circle,rgba(251,146,60,.55),rgba(251,146,60,0) 70%);opacity:.45;animation:bombGlow 1.2s ease-in-out infinite;pointer-events:none}
+  @keyframes bombGlow{0%,100%{opacity:.3}50%{opacity:.9}}
   /* ---------- Ruleta diaria ---------- */
   #spinWheel{width:230px;height:230px;border-radius:50%;margin:14px auto;position:relative;border:4px solid rgba(56,189,248,.6);box-shadow:0 0 26px rgba(34,211,238,.4);transition:transform 3.2s cubic-bezier(.12,.8,.08,1)}
   /* v1.4.12: la etiqueta cabe en su cuna de 45°: antes tenia 64px de ancho a 72px del centro (la cuna ahi mide 55px) y el texto largo se salia y se encimaba. Ahora son dos lineas cortas de 10px en una caja de 52px a 96px del centro (la cuna ahi mide 55px). */
@@ -269,6 +271,8 @@
      componer 3 manchas + 6 motas en cada cuadro, encima del tablero y del
      fantasma, era parte del tiron. Al soltar, la animacion sigue donde iba. */
   body.dragging #bgBlobs .blob,body.dragging #bgBlobs .dot{animation-play-state:paused}
+  /* v1.4.13: el fondo ambiental se congela DURANTE EL JUEGO (no solo al arrastrar): 3 manchas + 6 motas animando en cada cuadro, encima del tablero, eran trabajo del compositor en cada cuadro sin aportar nada mientras se juega. En el menu siguen flotando. */
+  body.playing #bgBlobs .blob,body.playing #bgBlobs .dot{animation-play-state:paused}
   /* Logo del menu: flota suave + el titulo brilla con un degradado que se mueve.
      (Solo el menu: no es un camino caliente del juego.) */
   .card img{animation:logoFloat 4.5s ease-in-out infinite}
@@ -490,7 +494,7 @@ body{background-image:url(bg-game.png);background-size:cover;background-position
   <div id="lineFlash"></div>
   <canvas id="fxCanvas"></canvas>
   <div id="levelOverlay"><div id="levelOverlayText"></div><div id="levelOverlaySub"></div></div>
-  <footer data-i18n-html="footer">Coloca las piezas, completa filas o columnas y gana CDAGO.<br>Modo infinito — ¡juega sin parar! · v1.4.12</footer>
+  <footer data-i18n-html="footer">Coloca las piezas, completa filas o columnas y gana CDAGO.<br>Modo infinito — ¡juega sin parar! · v1.4.13</footer>
 </div>
 <div id="powerFx" aria-hidden="true"></div>
 
@@ -797,7 +801,7 @@ const $ = id => document.getElementById(id);
 const I18N = {
   es: {
     points:"Puntos", best:"Récord",
-    footer:'Coloca las piezas, completa filas o columnas y gana CDAGO.<br>Modo infinito — ¡juega sin parar! · v1.4.12',
+    footer:'Coloca las piezas, completa filas o columnas y gana CDAGO.<br>Modo infinito — ¡juega sin parar! · v1.4.13',
     menuSub:'El rompecabezas de bloques de <b style="color:#fff">CoinDago</b>.<br>Arrastra las piezas al tablero, completa líneas y gana <b style="color:#22d3ee">CDAGO</b>.',
     play:"Jugar", options:"Opciones", howTo:"Cómo jugar",
     menuHint:"Sin internet · Modo infinito · Música original",
@@ -860,7 +864,7 @@ const I18N = {
   },
   en: {
     points:"Points", best:"Best",
-    footer:'Place the pieces, complete rows or columns and earn CDAGO.<br>Endless mode — play forever! · v1.4.12',
+    footer:'Place the pieces, complete rows or columns and earn CDAGO.<br>Endless mode — play forever! · v1.4.13',
     menuSub:'The CoinDago block puzzle.<br>Drag the pieces onto the board, complete lines and earn <b style="color:#22d3ee">CDAGO</b>.',
     play:"Play", options:"Options", howTo:"How to play",
     menuHint:"No internet · Endless mode · Original music",
@@ -1406,7 +1410,7 @@ function startDrag(e, slot){
   moveDrag(e); /* v1.4.10: moveDrag posiciona Y decide la visibilidad del fantasma (nunca fuera del tablero). */
   ghostEl.classList.add("dragging");
   try{ document.body.classList.add("dragging"); }catch(e){} /* v1.4.11: congela el fondo ambiental mientras se arrastra */
-  document.addEventListener("pointermove", moveDrag);
+  document.addEventListener("pointermove", moveDrag, {passive:true}); /* v1.4.13: moveDrag nunca llama preventDefault; pasivo para que el navegador no espere al JS en cada movimiento del dedo */
   document.addEventListener("pointerup", endDrag, {once:true});
   document.addEventListener("pointercancel", endDrag, {once:true});
 }
@@ -1504,6 +1508,7 @@ function doPlace(slot, shape, r, c){
   const lines = fullLines();
   const total = lines.rows.length + lines.cols.length;
   if(total>0){
+    state._boardDirty = true; /* v1.4.13: el tablero cambio (lineas por borrar) y afterPlacement debe repintarlo */
     // animación de limpieza: onda de color por línea (cada línea un color vivo)
     const themes = lineThemes(total);
     const lineList = [];
@@ -1569,6 +1574,7 @@ function doPlace(slot, shape, r, c){
     }, 300);
     tutorialEvent("place", total);
   } else {
+    state._boardDirty = false; /* v1.4.13: sin lineas el tablero ya quedo pintado por doPlace */
     tutorialEvent("place", 0);
     updateDailyProgress("score", state.score);
     afterPlacement();
@@ -1583,8 +1589,12 @@ function checkGameOver(){
   }
 }
 function afterPlacement(){
-  if(state.tray.every(s=>!s)) dealTray();
-  renderAll();
+  /* v1.4.13: solo se repinta lo que cambio. Antes renderAll() reconstruia TODA la bandeja (~30 nodos + listeners) en cada jugada aunque solo cambiara un hueco (ya vaciado por clearTraySlot) y volvia a pintar el tablero entero aunque doPlace acabara de pintarlo: dos repintados completos por jugada. */
+  const empty = state.tray.every(s=>!s);
+  if(empty) dealTray();
+  if(state._boardDirty){ renderBoard(); state._boardDirty = false; }
+  updateHUD();
+  if(empty) renderTray();
   state.busy = false;
   checkGameOver();
 }
@@ -1636,6 +1646,7 @@ function newGame(){
   updateDailyUI();
   $("titleScreen").classList.add("hidden");
   $("gameOverScreen").classList.add("hidden");
+  try{ document.body.classList.add("playing"); }catch(e){} /* v1.4.13: congela el fondo ambiental durante el juego */
   updateTutorialUI();
   state.started = true;
   switchRecordedTrack();
@@ -1705,6 +1716,7 @@ function quitToMenu(){
   const ps = $("pauseScreen"); if(ps) ps.classList.add("hidden");
   const go = $("gameOverScreen"); if(go) go.classList.add("hidden");
   const ts = $("titleScreen"); if(ts){ ts.classList.remove("hidden"); ts.scrollTop = 0; }
+  try{ document.body.classList.remove("playing"); }catch(e){} /* v1.4.13: el fondo vuelve a flotar en el menu */
   updateStatsUI(); updateAchievementsUI(); updateDailyUI(); updateStreakUI(); updateModeUI();
   return true;
 }
@@ -1954,6 +1966,9 @@ function useBomb(r, c){
   }
   const bw = $("boardWrap");
   if(bw){ bw.classList.add("bomb-flash"); setTimeout(()=>bw.classList.remove("bomb-flash"), 550); }
+  /* v1.4.13: ADEMAS del latido del tablero, el destello luminoso de la bomba va por #lineFlash (opacidad, lo compone la GPU). Antes el brillo era filter:brightness() sobre el tablero entero. */
+  const _fl2 = $("lineFlash");
+  if(_fl2){ _fl2.style.background = "radial-gradient(circle at 50% 40%, rgba(251,146,60,.55), transparent 70%)"; _fl2.classList.remove("flash"); _fl2.classList.add("flash"); }
   tutorialEvent("powerup");
   shakeScreen();
   updatePowerUI();
@@ -2311,6 +2326,13 @@ function loadDailyChallenge(){
 function saveDailyChallenge(){
   try{ localStorage.setItem("dagoBlocksDaily", JSON.stringify(state.daily)); }catch(e){}
 }
+/* v1.4.13: los guardados a disco se AGRUPAN (debounce 800ms) y se vacian al ocultar la pagina. Antes cada jugada escribia en localStorage 1-3 veces dentro de la tarea de colocacion/limpieza (E/S sincrona al flash del telefono, que en gama baja tarda milisegundos). La memoria sigue siendo la fuente de verdad durante el juego; el disco solo es persistencia. */
+let _saveDailyT = null, _saveStatsT = null;
+function saveDailyChallengeSoon(){ if(_saveDailyT) return; _saveDailyT = setTimeout(()=>{ _saveDailyT = null; saveDailyChallenge(); }, 800); }
+function saveStatsSoon(){ if(_saveStatsT) return; _saveStatsT = setTimeout(()=>{ _saveStatsT = null; saveStats(); }, 800); }
+function flushSaves(){ if(_saveDailyT){ clearTimeout(_saveDailyT); _saveDailyT = null; saveDailyChallenge(); } if(_saveStatsT){ clearTimeout(_saveStatsT); _saveStatsT = null; saveStats(); } }
+if(typeof document !== "undefined" && document.addEventListener){ document.addEventListener("visibilitychange", function(){ if(document.hidden) flushSaves(); }); }
+if(typeof window !== "undefined" && window.addEventListener){ window.addEventListener("pagehide", flushSaves); }
 function dailyDesc(){
   if(!state.daily) return "";
   const key = state.daily.type==="lines" ? "dailyLines" : state.daily.type==="score" ? "dailyScore" : "dailyCombos";
@@ -2335,16 +2357,16 @@ function updateDailyProgress(type, value){
   if(d.progress >= d.target){
     d.progress = d.target;
     d.completed = true;
-    saveDailyChallenge();
+    saveDailyChallengeSoon(); /* v1.4.13: guardado agrupado */
     updateDailyUI();
     try{ localStorage.setItem("dagoBlocksPowerupBonus", "1"); }catch(e){}
     showToast(t("dailyDone"));
     sfxDailyDone();
     state.stats.dailyDone++;
-    saveStats();
+    saveStatsSoon(); /* v1.4.13: guardado agrupado */
     checkAchievements();
   } else {
-    saveDailyChallenge();
+    saveDailyChallengeSoon(); /* v1.4.13: guardado agrupado */
     updateDailyUI();
   }
 }
@@ -2499,13 +2521,22 @@ function nextFrame(fn){ try{ if(typeof requestAnimationFrame === "function"){ re
    tamaño real cambia. Asignar width/height borra el canvas y fuerza
    layout: antes se hacía en CADA celda de cada línea limpiada (16
    veces por línea), un tirón justo al limpiar. */
-function fxEnsureSize(){
+/* v1.4.13: el canvas de efectos esta RECORTADO AL TABLERO (antes era toda la pantalla fija): al romper lineas se componia una capa de 360x780px encima de todo, y cada particula volaba por zonas que no se ven. Ahora el canvas cubre solo el tablero (~331x331px) y las coordenadas de las particulas se trasladan a su origen (ver spawnParticlesAtCell/spawnConfettiAtCell/spawnSparks). El tamano se cachea y solo se relee al cambiar el tamano o al marcarse la geometria sucia. */
+let fxBoard = null;
+function fxEnsureSize(force){
   try{
-    if(fxCanvas && typeof window !== "undefined" && window.innerWidth){
-      if(fxCanvas.width !== window.innerWidth || fxCanvas.height !== window.innerHeight){
-        fxCanvas.width = window.innerWidth;
-        fxCanvas.height = window.innerHeight;
-      }
+    if(!fxCanvas || typeof window === "undefined" || !window.innerWidth) return;
+    if(!force && fxBoard && !geomDirty) return;
+    const r = boardEl && boardEl.getBoundingClientRect ? boardEl.getBoundingClientRect() : null;
+    if(r && r.width > 0 && r.height > 0){
+      fxBoard = {x: Math.round(r.left), y: Math.round(r.top), w: Math.round(r.width), h: Math.round(r.height)};
+      if(fxCanvas.width !== fxBoard.w || fxCanvas.height !== fxBoard.h){ fxCanvas.width = fxBoard.w; fxCanvas.height = fxBoard.h; }
+      fxCanvas.style.left = fxBoard.x + "px"; fxCanvas.style.top = fxBoard.y + "px";
+      fxCanvas.style.width = fxBoard.w + "px"; fxCanvas.style.height = fxBoard.h + "px";
+    } else {
+      fxBoard = null;
+      if(fxCanvas.width !== window.innerWidth || fxCanvas.height !== window.innerHeight){ fxCanvas.width = window.innerWidth; fxCanvas.height = window.innerHeight; }
+      fxCanvas.style.left = ""; fxCanvas.style.top = ""; fxCanvas.style.width = ""; fxCanvas.style.height = "";
     }
   }catch(e){}
 }
@@ -2531,6 +2562,8 @@ function spawnParticlesAtCell(r, c, color, cx, cy, count){
       const rect = el.getBoundingClientRect();
       cx = rect.left + rect.width/2; cy = rect.top + rect.height/2;
     }
+    /* v1.4.13: coordenadas de ventana -> origen del canvas recortado al tablero. */
+    if(fxBoard){ cx -= fxBoard.x; cy -= fxBoard.y; }
     for(let i=0;i<(count||10) && particles.length < MAX_PARTICLES;i++){
       const p = allocParticle();
       p.x = cx; p.y = cy; p.vx = (Math.random()-0.5)*260; p.vy = (Math.random()-0.9)*260;
@@ -2550,6 +2583,8 @@ function spawnConfettiAtCell(r, c, colors, cx, cy){
       const rect = el.getBoundingClientRect();
       cx = rect.left + rect.width/2; cy = rect.top + rect.height/2;
     }
+    /* v1.4.13: coordenadas de ventana -> origen del canvas recortado al tablero. */
+    if(fxBoard){ cx -= fxBoard.x; cy -= fxBoard.y; }
     for(let i=0;i<2 && particles.length < MAX_PARTICLES;i++){
       const p = allocParticle();
       p.x = cx; p.y = cy; p.vx = (Math.random()-0.5)*320; p.vy = (Math.random()-1.1)*300;
@@ -2564,6 +2599,8 @@ function spawnConfettiAtCell(r, c, colors, cx, cy){
 function spawnSparks(cx, cy, color){
   if(!fxCtx || cx === undefined || cy === undefined) return;
   try{
+    /* v1.4.13: coordenadas de ventana -> origen del canvas recortado al tablero. */
+    if(fxBoard){ cx -= fxBoard.x; cy -= fxBoard.y; }
     for(let i=0;i<8 && particles.length < MAX_PARTICLES;i++){
       const p = allocParticle();
       const a = Math.random()*Math.PI*2, sp = 240 + Math.random()*220;
@@ -3228,7 +3265,7 @@ $("btnShareImgMenu").addEventListener("click", ()=>shareRecordImage(state.best))
 $("btnShareImgGameOver").addEventListener("click", ()=>shareRecordImage(state.score));
 /* El canvas de efectos sigue al tamaño de la ventana (rotación); solo
    se redimensiona si cambió, nunca en cada partícula. */
-if(typeof window !== "undefined" && window.addEventListener) window.addEventListener("resize", fxEnsureSize);
+if(typeof window !== "undefined" && window.addEventListener) window.addEventListener("resize", function(){ fxEnsureSize(true); }); /* v1.4.13: al cambiar el tamano el canvas recortado al tablero debe recolocarse */
 if(typeof window !== "undefined" && window.addEventListener) window.addEventListener("resize", function(){ refreshBoardGeom(true); });
 /* v1.4.12: si la pagina se desplaza o el viewport cambia durante un
    arrastre (rotacion, barra del navegador al ocultarse, teclado), la
