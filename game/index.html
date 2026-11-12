@@ -99,7 +99,7 @@
   /* ---------- Overlays ---------- */
   .overlay{position:fixed;inset:0;background:#070d24;display:flex;align-items:flex-start;justify-content:center;z-index:80;padding:20px;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y}
   .overlay.hidden{display:none}
-  /* v1.4.17: intro de arranque: explosion de BLOQUES a pantalla completa
+  /* v1.4.18: intro de arranque: explosion de BLOQUES a pantalla completa
      + logo sin cuadro. Solo transform y opacidad (transiciones, sin
      keyframes nuevos); el overlay se quita del DOM al terminar para no
      costar nada durante el juego. El logo del intro es un asset propio
@@ -109,9 +109,13 @@
   #introOverlay{position:fixed;inset:0;background:#070d24;z-index:200;display:flex;align-items:center;justify-content:center;overflow:hidden}
   #introOverlay.done{display:none}
   #introCanvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-  #introLogoWrap{position:relative;z-index:1;width:min(62vw,250px);aspect-ratio:1/1;background-image:url(logo-intro.png);background-size:contain;background-repeat:no-repeat;background-position:center;opacity:0;transform:scale(.5);transition:transform .55s cubic-bezier(.2,1.4,.4,1),opacity .4s ease;will-change:transform,opacity}
-  #introOverlay.pop #introLogoWrap{opacity:1;transform:scale(1)}
+  #introLogoWrap{position:relative;z-index:1;width:min(82vw,360px);aspect-ratio:1/1;background-image:url(logo-intro.png);background-size:contain;background-repeat:no-repeat;background-position:center;opacity:0;transform:scale(.45) rotate(-10deg);transition:transform .55s cubic-bezier(.2,1.4,.4,1),opacity .4s ease;will-change:transform,opacity}
+  #introOverlay.pop #introLogoWrap{animation:introLogoIn .55s cubic-bezier(.2,1.4,.4,1) forwards,introLogoPulse 1.15s ease-in-out .6s infinite}
   #introOverlay.fade{transition:opacity .3s ease;opacity:0}
+  @keyframes introLogoIn{from{opacity:0;transform:scale(.45) rotate(-10deg)}to{opacity:1;transform:scale(1) rotate(0deg)}}
+  @keyframes introLogoPulse{0%,100%{transform:scale(1) rotate(0deg)}50%{transform:scale(1.045) rotate(0deg)}}
+  #introFooter{position:absolute;left:0;right:0;bottom:max(18px,env(safe-area-inset-bottom,0px));z-index:2;text-align:center;font-size:11px;letter-spacing:.08em;color:rgba(255,255,255,.55);opacity:0;transition:opacity .5s ease .5s;pointer-events:none}
+  #introOverlay.pop #introFooter{opacity:1}
   .overlay .card{margin:auto;position:relative;z-index:1}
   .card{position:relative;width:min(92vw,380px);background:linear-gradient(180deg,#16215c,#0c1338);border:1px solid rgba(56,189,248,.4);border-radius:24px;padding:28px 22px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.6)}
   /* v1.4.12: en pantallas angostas la tarjeta cabe dentro del overlay: con padding 20px la tarjeta de 92vw (331px a 360px) era mas ancha que el hueco (320px) y se salia 11px por la derecha. */
@@ -507,11 +511,11 @@ body{background-image:url(bg-game.png);background-size:cover;background-position
   <div id="lineFlash"></div>
   <canvas id="fxCanvas"></canvas>
   <div id="levelOverlay"><div id="levelOverlayText"></div><div id="levelOverlaySub"></div></div>
-  <footer data-i18n-html="footer">Coloca las piezas, completa filas o columnas y gana CDAGO.<br>Modo infinito — ¡juega sin parar! · v1.4.17</footer>
+  <footer data-i18n-html="footer">Coloca las piezas, completa filas o columnas y gana CDAGO.<br>Modo infinito — ¡juega sin parar! · v1.4.18</footer>
 </div>
 <div id="powerFx" aria-hidden="true"></div>
 
-<div id="introOverlay" aria-hidden="true"><canvas id="introCanvas"></canvas><div id="introLogoWrap"></div></div>
+<div id="introOverlay" aria-hidden="true"><canvas id="introCanvas"></canvas><div id="introLogoWrap"></div><div id="introFooter">Todos los derechos reservados para CoinDago ®</div></div>
 
 <div class="overlay" id="titleScreen">
   <div id="menuBg"></div>
@@ -816,7 +820,7 @@ const $ = id => document.getElementById(id);
 const I18N = {
   es: {
     points:"Puntos", best:"Récord",
-    footer:'Coloca las piezas, completa filas o columnas y gana CDAGO.<br>Modo infinito — ¡juega sin parar! · v1.4.17',
+    footer:'Coloca las piezas, completa filas o columnas y gana CDAGO.<br>Modo infinito — ¡juega sin parar! · v1.4.18',
     menuSub:'El rompecabezas de bloques de <b style="color:#fff">CoinDago</b>.<br>Arrastra las piezas al tablero, completa líneas y gana <b style="color:#22d3ee">CDAGO</b>.',
     play:"Jugar", options:"Opciones", howTo:"Cómo jugar",
     menuHint:"Sin internet · Modo infinito · Música original",
@@ -879,7 +883,7 @@ const I18N = {
   },
   en: {
     points:"Points", best:"Best",
-    footer:'Place the pieces, complete rows or columns and earn CDAGO.<br>Endless mode — play forever! · v1.4.17',
+    footer:'Place the pieces, complete rows or columns and earn CDAGO.<br>Endless mode — play forever! · v1.4.18',
     menuSub:'The CoinDago block puzzle.<br>Drag the pieces onto the board, complete lines and earn <b style="color:#22d3ee">CDAGO</b>.',
     play:"Play", options:"Options", howTo:"How to play",
     menuHint:"No internet · Endless mode · Original music",
@@ -3353,23 +3357,25 @@ $("pauseScreen").classList.add("hidden");
 updateStreakUI();
 applyLanguage();
 
-/* ---------- v1.4.17: intro de arranque ---------- */
-/* Explosion de BLOQUES a pantalla completa + logo sin cuadro al abrir
+/* ---------- v1.4.18: intro de arranque ---------- */
+/* Explosion de BLOQUES a pantalla completa + logo 3D COMPLETO al abrir
    el juego. Dura ~2.1s, se salta con un toque, y no retrasa el menu ni
    el inicio del juego: el menu ya esta en el DOM detras del overlay y
    la partida se prepara igual que siempre (la intro es solo cosmetica).
    Solo transform y opacidad; bloques y chispas del pool (mismo patron
    que fxLoop: objetos reutilizados, tope, rAF con dt limitado, y al
    terminar el overlay se quita del DOM y el bucle se para: cero costo
-   durante el juego). El logo del intro es un asset propio sin fondo
-   (logo-intro.png en el split; en el canonico va como background-image
-   en base64 en #introLogoWrap): NUNCA se clona #logoImg, su cuadro
-   oscuro viene incrustado en la imagen. */
-const INTRO_MS = 2100; /* v1.4.17: duracion total de la intro */
-const INTRO_BLOCKS = 36; /* v1.4.17: bloques de la explosion */
-const INTRO_SPARKS = 120; /* v1.4.17: chispas de la explosion */
-const INTRO_POP_MS = 900; /* v1.4.17: el logo entra a los 900ms */
-const INTRO_FADE_MS = 1800; /* v1.4.17: el overlay empieza a desvanecerse */
+   durante el juego). El logo del intro es el logo 3D COMPLETO
+   (dago-blocks-logo-3d.png: moneda + bloques + piso + brillo, una escena
+   entera, SIN recortar y SIN quitarle el fondo; su fondo azul marino se
+   funde con el overlay, asi no se ven bordes comidos. En el split va como
+   logo-intro.png; en el canonico va como background-image en base64 en
+   #introLogoWrap): NUNCA se clona #logoImg. */
+const INTRO_MS = 2100; /* v1.4.18: duracion total de la intro */
+const INTRO_BLOCKS = 44; /* v1.4.18: bloques de la explosion */
+const INTRO_SPARKS = 150; /* v1.4.18: chispas de la explosion */
+const INTRO_POP_MS = 900; /* v1.4.18: el logo entra a los 900ms */
+const INTRO_FADE_MS = 1800; /* v1.4.18: el overlay empieza a desvanecerse */
 const INTRO_BLOCK_COLORS = ["#2563eb", "#3b82f6", "#22d3ee", "#60a5fa", "#7dd3fc", "#ffffff"];
 const INTRO_BLOCK_LIGHT = ["#93c5fd", "#bfdbfe", "#a5f3fc", "#bae6fd", "#e0f2fe", "#ffffff"];
 const INTRO_SPARK_COLORS = ["#22d3ee", "#60a5fa", "#7dd3fc", "#ffffff", "#38bdf8"];
@@ -3459,7 +3465,8 @@ function startIntro(){
           }
         }
         if(introPopped && glowGrad){
-          ctx.globalAlpha = Math.max(0, Math.min(1, (elapsed - INTRO_POP_MS)/400));
+          const gRamp = Math.max(0, Math.min(1, (elapsed - INTRO_POP_MS)/400));
+          ctx.globalAlpha = gRamp * (0.78 + 0.22*Math.sin((elapsed - INTRO_POP_MS)/170));
           ctx.fillStyle = glowGrad;
           ctx.fillRect(0, 0, cv.width, cv.height);
         }
