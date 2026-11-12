@@ -99,14 +99,17 @@
   /* ---------- Overlays ---------- */
   .overlay{position:fixed;inset:0;background:#070d24;display:flex;align-items:flex-start;justify-content:center;z-index:80;padding:20px;overflow-y:auto;-webkit-overflow-scrolling:touch;touch-action:pan-y}
   .overlay.hidden{display:none}
-  /* v1.4.16: intro de arranque: explosion azul/cian y logo. Solo transform
-     y opacidad (transiciones, sin keyframes nuevos); el overlay se quita
-     del DOM al terminar para no costar nada durante el juego. */
+  /* v1.4.17: intro de arranque: explosion de BLOQUES a pantalla completa
+     + logo sin cuadro. Solo transform y opacidad (transiciones, sin
+     keyframes nuevos); el overlay se quita del DOM al terminar para no
+     costar nada durante el juego. El logo del intro es un asset propio
+     sin fondo (logo-intro.png en el split; en el canonico va como
+     background-image en base64): NUNCA se clona #logoImg (su cuadro
+     oscuro viene incrustado en la imagen). */
   #introOverlay{position:fixed;inset:0;background:#070d24;z-index:200;display:flex;align-items:center;justify-content:center;overflow:hidden}
   #introOverlay.done{display:none}
   #introCanvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-  #introLogoWrap{position:relative;z-index:1;opacity:0;transform:scale(.55);transition:transform .5s cubic-bezier(.2,1.4,.4,1),opacity .35s ease;will-change:transform,opacity}
-  #introLogoWrap img{width:min(56vw,220px);height:auto;border-radius:28px;box-shadow:0 0 40px rgba(34,211,238,.55)}
+  #introLogoWrap{position:relative;z-index:1;width:min(62vw,250px);aspect-ratio:1/1;background-image:url(logo-intro.png);background-size:contain;background-repeat:no-repeat;background-position:center;opacity:0;transform:scale(.5);transition:transform .55s cubic-bezier(.2,1.4,.4,1),opacity .4s ease;will-change:transform,opacity}
   #introOverlay.pop #introLogoWrap{opacity:1;transform:scale(1)}
   #introOverlay.fade{transition:opacity .3s ease;opacity:0}
   .overlay .card{margin:auto;position:relative;z-index:1}
@@ -504,7 +507,7 @@ body{background-image:url(bg-game.png);background-size:cover;background-position
   <div id="lineFlash"></div>
   <canvas id="fxCanvas"></canvas>
   <div id="levelOverlay"><div id="levelOverlayText"></div><div id="levelOverlaySub"></div></div>
-  <footer data-i18n-html="footer">Coloca las piezas, completa filas o columnas y gana CDAGO.<br>Modo infinito — ¡juega sin parar! · v1.4.16</footer>
+  <footer data-i18n-html="footer">Coloca las piezas, completa filas o columnas y gana CDAGO.<br>Modo infinito — ¡juega sin parar! · v1.4.17</footer>
 </div>
 <div id="powerFx" aria-hidden="true"></div>
 
@@ -813,7 +816,7 @@ const $ = id => document.getElementById(id);
 const I18N = {
   es: {
     points:"Puntos", best:"Récord",
-    footer:'Coloca las piezas, completa filas o columnas y gana CDAGO.<br>Modo infinito — ¡juega sin parar! · v1.4.16',
+    footer:'Coloca las piezas, completa filas o columnas y gana CDAGO.<br>Modo infinito — ¡juega sin parar! · v1.4.17',
     menuSub:'El rompecabezas de bloques de <b style="color:#fff">CoinDago</b>.<br>Arrastra las piezas al tablero, completa líneas y gana <b style="color:#22d3ee">CDAGO</b>.',
     play:"Jugar", options:"Opciones", howTo:"Cómo jugar",
     menuHint:"Sin internet · Modo infinito · Música original",
@@ -876,7 +879,7 @@ const I18N = {
   },
   en: {
     points:"Points", best:"Best",
-    footer:'Place the pieces, complete rows or columns and earn CDAGO.<br>Endless mode — play forever! · v1.4.16',
+    footer:'Place the pieces, complete rows or columns and earn CDAGO.<br>Endless mode — play forever! · v1.4.17',
     menuSub:'The CoinDago block puzzle.<br>Drag the pieces onto the board, complete lines and earn <b style="color:#22d3ee">CDAGO</b>.',
     play:"Play", options:"Options", howTo:"How to play",
     menuHint:"No internet · Endless mode · Original music",
@@ -2563,7 +2566,7 @@ const particlePool = [];
 function allocParticle(){
   const p = particlePool.pop();
   if(p) return p;
-  return {x:0, y:0, vx:0, vy:0, life:0, t:0, color:"#22d3ee", size:3, rect:false, rot:0, vr:0};
+  return {x:0, y:0, vx:0, vy:0, life:0, t:0, color:"#22d3ee", size:3, rect:false, rot:0, vr:0, block:false, light:"#ffffff"};
 }
 function spawnParticlesAtCell(r, c, color, cx, cy, count){
   if(!fxCtx) return;
@@ -3350,20 +3353,30 @@ $("pauseScreen").classList.add("hidden");
 updateStreakUI();
 applyLanguage();
 
-/* ---------- v1.4.16: intro de arranque ---------- */
-/* Explosion azul/cian + logo al abrir el juego. Dura 1.2s maximo, se
-   salta con un toque, y no retrasa el menu ni el inicio del juego:
-   el menu ya esta en el DOM detras del overlay y la partida se
-   prepara igual que siempre (la intro es solo cosmetica, encima).
-   Solo transform y opacidad; particulas del pool (mismo patron que
-   fxLoop: objetos reutilizados, tope, rAF con dt limitado, y al
-   terminar el overlay se quita del DOM y el bucle se para: cero
-   costo durante el juego). */
-const INTRO_MS = 1200; /* v1.4.16: duracion total maxima de la intro */
-const INTRO_PARTICLES = 110; /* v1.4.16: tope de particulas de la explosion */
-const INTRO_COLORS = ["#22d3ee", "#60a5fa", "#7dd3fc", "#ffffff", "#38bdf8"];
+/* ---------- v1.4.17: intro de arranque ---------- */
+/* Explosion de BLOQUES a pantalla completa + logo sin cuadro al abrir
+   el juego. Dura ~2.1s, se salta con un toque, y no retrasa el menu ni
+   el inicio del juego: el menu ya esta en el DOM detras del overlay y
+   la partida se prepara igual que siempre (la intro es solo cosmetica).
+   Solo transform y opacidad; bloques y chispas del pool (mismo patron
+   que fxLoop: objetos reutilizados, tope, rAF con dt limitado, y al
+   terminar el overlay se quita del DOM y el bucle se para: cero costo
+   durante el juego). El logo del intro es un asset propio sin fondo
+   (logo-intro.png en el split; en el canonico va como background-image
+   en base64 en #introLogoWrap): NUNCA se clona #logoImg, su cuadro
+   oscuro viene incrustado en la imagen. */
+const INTRO_MS = 2100; /* v1.4.17: duracion total de la intro */
+const INTRO_BLOCKS = 36; /* v1.4.17: bloques de la explosion */
+const INTRO_SPARKS = 120; /* v1.4.17: chispas de la explosion */
+const INTRO_POP_MS = 900; /* v1.4.17: el logo entra a los 900ms */
+const INTRO_FADE_MS = 1800; /* v1.4.17: el overlay empieza a desvanecerse */
+const INTRO_BLOCK_COLORS = ["#2563eb", "#3b82f6", "#22d3ee", "#60a5fa", "#7dd3fc", "#ffffff"];
+const INTRO_BLOCK_LIGHT = ["#93c5fd", "#bfdbfe", "#a5f3fc", "#bae6fd", "#e0f2fe", "#ffffff"];
+const INTRO_SPARK_COLORS = ["#22d3ee", "#60a5fa", "#7dd3fc", "#ffffff", "#38bdf8"];
 let introDone = false;
 let introParts = [];
+let introPopped = false;
+let introFading = false;
 function introFinish(){
   if(introDone) return;
   introDone = true;
@@ -3371,7 +3384,7 @@ function introFinish(){
     for(const p of introParts){ particlePool.push(p); }
     introParts.length = 0;
     const ov = $("introOverlay");
-    if(ov) ov.classList.add("done");
+    if(ov){ ov.classList.add("done"); if(typeof ov.remove === "function") ov.remove(); }
   }catch(e){}
 }
 function introSkip(){ introFinish(); }
@@ -3380,11 +3393,6 @@ function startIntro(){
     const ov = $("introOverlay");
     if(!ov) return;
     if(typeof matchMedia === "function" && matchMedia("(prefers-reduced-motion: reduce)").matches){ introFinish(); return; }
-    const wrap = $("introLogoWrap");
-    const logo = $("logoImg");
-    if(wrap && logo && typeof logo.cloneNode === "function" && !wrap.firstChild){
-      wrap.appendChild(logo.cloneNode(true));
-    }
     const cv = $("introCanvas");
     if(!cv || typeof cv.getContext !== "function"){ introFinish(); return; }
     const ctx = cv.getContext("2d");
@@ -3393,24 +3401,54 @@ function startIntro(){
     const h = (typeof window !== "undefined" && window.innerHeight) || 640;
     if(cv.width !== w || cv.height !== h){ cv.width = w; cv.height = h; }
     const cx = w / 2, cy = h / 2;
-    for(let i=0;i<INTRO_PARTICLES;i++){
+    const maxR = Math.sqrt(cx*cx + cy*cy);
+    /* Resplandor radial detras del logo: se crea UNA sola vez (no por cuadro). */
+    let glowGrad = null;
+    try{
+      if(typeof ctx.createRadialGradient === "function"){
+        glowGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, Math.min(w, h)*0.45);
+        glowGrad.addColorStop(0, "rgba(34,211,238,0.5)");
+        glowGrad.addColorStop(1, "rgba(34,211,238,0)");
+      }
+    }catch(e){}
+    /* Bloques: piezas cuadradas grandes que vuelan del centro a toda la pantalla. */
+    for(let i=0;i<INTRO_BLOCKS;i++){
       const p = allocParticle();
-      const a = Math.random()*Math.PI*2, sp = 180 + Math.random()*420;
+      const a = Math.random()*Math.PI*2;
+      const sp = (0.55 + Math.random()*0.75) * (maxR / 1.05);
+      p.x = cx; p.y = cy; p.vx = Math.cos(a)*sp; p.vy = Math.sin(a)*sp - 120;
+      p.life = 0.9 + Math.random()*0.6; p.t = 0;
+      p.color = INTRO_BLOCK_COLORS[i % INTRO_BLOCK_COLORS.length];
+      p.light = INTRO_BLOCK_LIGHT[i % INTRO_BLOCK_LIGHT.length];
+      p.size = 14 + Math.random()*28;
+      p.rect = true; p.rot = Math.random()*Math.PI; p.vr = (Math.random()-0.5)*10;
+      p.block = true;
+      introParts.push(p);
+    }
+    /* Chispas: puntos rapidos que acompanan a los bloques. */
+    for(let i=0;i<INTRO_SPARKS;i++){
+      const p = allocParticle();
+      const a = Math.random()*Math.PI*2, sp = 220 + Math.random()*680;
       p.x = cx; p.y = cy; p.vx = Math.cos(a)*sp; p.vy = Math.sin(a)*sp - 140;
-      p.life = 0.55 + Math.random()*0.45; p.t = 0;
-      p.color = INTRO_COLORS[i % INTRO_COLORS.length];
-      p.size = 2 + Math.random()*4;
-      p.rect = Math.random() < 0.35; p.rot = Math.random()*Math.PI; p.vr = (Math.random()-0.5)*14;
+      p.life = 0.4 + Math.random()*0.5; p.t = 0;
+      p.color = INTRO_SPARK_COLORS[i % INTRO_SPARK_COLORS.length];
+      p.size = 2 + Math.random()*3;
+      p.rect = false; p.rot = 0; p.vr = 0; p.block = false;
       introParts.push(p);
     }
     ov.addEventListener("pointerdown", introSkip, {passive:true});
-    ov.classList.add("pop");
+    /* El pop y el desvanecido van por temporizador real (no por el
+       timestamp del rAF, que se puede atascar si la pestana va lenta):
+       asi el logo entra siempre a los 900ms y el overlay se va a los 1800ms. */
+    setTimeout(()=>{ if(!introDone){ introPopped = true; ov.classList.add("pop"); } }, INTRO_POP_MS);
+    setTimeout(()=>{ if(!introDone){ introFading = true; ov.classList.add("fade"); } }, INTRO_FADE_MS);
     const t0 = (typeof performance !== "undefined" && performance.now) ? performance.now() : Date.now();
     let last = 0;
     const step = (now)=>{
       if(introDone) return;
       const dt = last ? Math.min(0.05, ((now - last)/1000) || 0.016) : 0.016;
       last = now || 0;
+      const elapsed = (now || 0) - t0;
       try{
         ctx.clearRect(0, 0, cv.width, cv.height);
         for(let i=introParts.length-1;i>=0;i--){
@@ -3420,30 +3458,35 @@ function startIntro(){
             introParts.pop();
           }
         }
+        if(introPopped && glowGrad){
+          ctx.globalAlpha = Math.max(0, Math.min(1, (elapsed - INTRO_POP_MS)/400));
+          ctx.fillStyle = glowGrad;
+          ctx.fillRect(0, 0, cv.width, cv.height);
+        }
         for(const p of introParts){
-          p.t += dt; p.x += p.vx*dt; p.y += p.vy*dt; p.vy += 260*dt;
+          p.t += dt; p.x += p.vx*dt; p.y += p.vy*dt; p.vy += 300*dt;
           if(p.rect) p.rot = (p.rot || 0) + (p.vr || 0)*dt;
           ctx.globalAlpha = Math.max(0, 1 - p.t/p.life);
-          ctx.fillStyle = p.color;
-          if(p.rect){
+          if(p.block){
+            const s = p.size, s2 = s/2;
             ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.rot || 0);
-            ctx.fillRect(-p.size/2, -p.size/4, p.size, p.size/2); ctx.restore();
+            ctx.fillStyle = p.color;
+            ctx.fillRect(-s2, -s2, s, s);
+            ctx.fillStyle = p.light;
+            ctx.fillRect(-s2, -s2, s, Math.max(2, s*0.28));
+            ctx.restore();
           } else {
+            ctx.fillStyle = p.color;
             ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
           }
         }
         ctx.globalAlpha = 1;
       }catch(e){ introFinish(); return; }
-      const elapsed = (now || 0) - t0;
-      if(!introParts.length || elapsed >= 900){
-        ov.classList.add("fade");
-        setTimeout(introFinish, 300);
-        return;
-      }
+      if(elapsed >= INTRO_MS){ introFinish(); return; }
       nextFrame(step);
     };
     nextFrame(step);
-    /* Seguridad: la intro nunca pasa de 1.2s aunque algo se atore. */
+    /* Seguridad: la intro nunca pasa de 2.1s aunque algo se atore. */
     setTimeout(introFinish, INTRO_MS);
   }catch(e){ try{ introFinish(); }catch(_){} }
 }
