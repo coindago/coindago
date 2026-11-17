@@ -32,6 +32,8 @@
   a{color:var(--cyan); text-decoration:none}
   a:hover{text-decoration:underline}
   img{max-width:100%}
+  /* Slow space-travel background: fixed starfield canvas behind all content */
+  #space-bg{position:fixed; inset:0; width:100%; height:100%; z-index:-1; pointer-events:none}
   .wrap{max-width:1120px; margin:0 auto; padding:0 20px}
   section{padding:64px 0 8px}
   section h2{font-size:clamp(26px,4vw,36px); font-weight:800; margin-bottom:14px}
@@ -217,6 +219,7 @@
 </style>
 </head>
 <body>
+  <canvas id="space-bg" aria-hidden="true"></canvas>
 
 <header>
   <div class="wrap header-in">
@@ -936,6 +939,74 @@
   window.addEventListener("resize", revealInView);
   setTimeout(revealInView, 300);
   setTimeout(revealInView, 1200);
+  /* Slow space-travel background: drifting starfield on a fixed canvas.
+     Stars move slowly downward (like flying forward), twinkle gently,
+     and wrap around. Pauses when the tab is hidden or reduced motion is set. */
+  (function(){
+    var cv = document.getElementById("space-bg");
+    if (!cv || !cv.getContext) return;
+    var ctx = cv.getContext("2d");
+    var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+    var W = 0, H = 0, stars = [];
+    function resize(){
+      W = window.innerWidth; H = window.innerHeight;
+      cv.width = Math.floor(W * dpr); cv.height = Math.floor(H * dpr);
+      cv.style.width = W + "px"; cv.style.height = H + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      build();
+    }
+    function build(){
+      stars = [];
+      var count = Math.round((W * H) / 9000);
+      count = Math.max(70, Math.min(count, 170));
+      for (var i = 0; i < count; i++){
+        var depth = Math.random();
+        stars.push({
+          x: Math.random() * W,
+          y: Math.random() * H,
+          r: 0.4 + depth * 1.3,
+          speed: 0.05 + depth * 0.22,
+          drift: (Math.random() - 0.5) * 0.08,
+          base: 0.35 + depth * 0.55,
+          tw: Math.random() * Math.PI * 2,
+          twSpeed: 0.004 + Math.random() * 0.012
+        });
+      }
+    }
+    function draw(){
+      ctx.clearRect(0, 0, W, H);
+      for (var i = 0; i < stars.length; i++){
+        var s = stars[i];
+        var a = s.base * (0.7 + 0.3 * Math.sin(s.tw));
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(180, 215, 255, " + a.toFixed(3) + ")";
+        ctx.fill();
+      }
+    }
+    function step(){
+      for (var i = 0; i < stars.length; i++){
+        var s = stars[i];
+        s.y += s.speed; s.x += s.drift; s.tw += s.twSpeed;
+        if (s.y > H + 2){ s.y = -2; s.x = Math.random() * W; }
+        if (s.x > W + 2) s.x = -2;
+        if (s.x < -2) s.x = W + 2;
+      }
+      draw();
+    }
+    function loop(){
+      if (!document.hidden) step();
+      requestAnimationFrame(loop);
+    }
+    resize();
+    window.addEventListener("resize", resize);
+    if (reduceMotion){
+      draw();
+    } else {
+      requestAnimationFrame(loop);
+    }
+  })();
 })();
 </script>
 </body>
