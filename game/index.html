@@ -93,7 +93,7 @@
   #dragGhost .piece{gap:4px}
   #dragGhost .pcell{width:var(--gs,44px);height:var(--gs,44px)}
   /* ---------- Toast / combo ---------- */
-  #toast{position:fixed;left:50%;top:34%;transform:translate(-50%,-50%) scale(.8);font-size:34px;font-weight:900;color:#fff;text-shadow:0 0 18px rgba(34,211,238,.9),0 3px 0 rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease;z-index:60;text-align:center;width:max-content;max-width:92vw} /* v1.4.12: el aviso ocupa lo que necesita (antes se limitaba a ~180px y se partía en varias líneas) */
+  #toast{position:fixed;left:50%;top:34%;transform:translate(-50%,-50%) scale(.8);font-size:34px;font-weight:900;color:#fff;text-shadow:0 0 18px rgba(34,211,238,.9),0 3px 0 rgba(0,0,0,.4);opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease;z-index:300; /* v1.4.23: el aviso quedaba DETRÁS de la tienda (overlay z-80) y parecía que no pasaba nada */text-align:center;width:max-content;max-width:92vw} /* v1.4.12: el aviso ocupa lo que necesita (antes se limitaba a ~180px y se partía en varias líneas) */
   #toast.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
   #toast small{display:block;font-size:16px;color:var(--cyan)}
   /* ---------- Overlays ---------- */
@@ -259,6 +259,15 @@
   .pcell.skin-coin{background:linear-gradient(135deg,var(--c1,#b45309),var(--c2,#fde68a));box-shadow:0 0 8px rgba(245,158,11,.5)}
   .pcell.skin-crypto{background:linear-gradient(135deg,var(--c1,#0f172a),var(--c2,#22d3ee));box-shadow:0 0 8px rgba(34,211,238,.5)}
   .pcell.skin-diamond{background:linear-gradient(135deg,var(--c1,#e0f2fe),var(--c2,#ffffff));box-shadow:0 0 8px rgba(186,230,253,.8)}
+  /* v1.4.21: pulso neón — solo se anima la opacidad (compone la GPU).
+     ::after ya existe en .cell.filled (punto blanco); en skins neón se
+     convierte en halo de luz. En .pcell y .shop-block el ::after es libre. */
+  .cell.filled.skin-glow{box-shadow:0 0 12px var(--c2,#22d3ee),inset 0 2px 3px rgba(255,255,255,.35),inset 0 -2px 4px rgba(0,0,0,.25)}
+  .cell.filled.skin-glow::after{content:"";position:absolute;left:-3px;right:-3px;top:-3px;bottom:-3px;width:auto;height:auto;border-radius:9px;background:radial-gradient(circle,var(--c2,#22d3ee) 0%,transparent 70%);opacity:.5;animation:neonPulse 1.8s ease-in-out infinite;pointer-events:none}
+  @keyframes neonPulse{0%,100%{opacity:.35}50%{opacity:.75}}
+  .pcell.skin-glow:not(.empty)::after{content:"";position:absolute;left:-2px;right:-2px;top:-2px;bottom:-2px;border-radius:7px;background:radial-gradient(circle,var(--c2,#22d3ee) 0%,transparent 70%);opacity:.5;animation:neonPulse 1.8s ease-in-out infinite;pointer-events:none}
+  .shop-block.skin-glow{box-shadow:0 0 10px var(--c2,#22d3ee),inset 0 2px 3px rgba(255,255,255,.35);animation:neonPulse 1.8s ease-in-out infinite}
+  .shop-section{font-size:14px;font-weight:900;color:#67e8f9;margin:16px 0 2px;text-align:left}
 
   /* ---------- v1.4.4: mas animacion y brillo (sin tocar el rendimiento) ----------
      Regla de oro: en el tablero, la bandeja y el arrastre solo se animan
@@ -511,7 +520,7 @@ body{background-image:url(bg-game.png);background-size:cover;background-position
   <div id="lineFlash"></div>
   <canvas id="fxCanvas"></canvas>
   <div id="levelOverlay"><div id="levelOverlayText"></div><div id="levelOverlaySub"></div></div>
-  <footer data-i18n-html="footer">Coloca las piezas, completa filas o columnas y gana CDAGO.<br>Modo infinito — ¡juega sin parar! · v1.4.18</footer>
+  <footer data-i18n-html="footer">Coloca las piezas, completa filas o columnas y gana CDAGO.<br>Modo infinito — ¡juega sin parar! · v1.4.22</footer>
 </div>
 <div id="powerFx" aria-hidden="true"></div>
 
@@ -750,13 +759,28 @@ const LARGE_SHAPES = SHAPES.filter(s => s.cells.length >= 4);
 /* ---------- aspectos (skins) de bloques: 6 pares de color cada uno ---------- */
 const SKINS = {
   default: {colors: PALETTE},
-  neon: {colors: [["#00f0ff","#7b2fff"],["#00ffa3","#00f0ff"],["#ff2fd6","#7b2fff"],["#00e5ff","#ff2fd6"],["#39ff6a","#00f0ff"],["#b967ff","#00e5ff"]]},
+  neon: {glow:true, colors: [["#00f0ff","#7b2fff"],["#00ffa3","#00f0ff"],["#ff2fd6","#7b2fff"],["#00e5ff","#ff2fd6"],["#39ff6a","#00f0ff"],["#b967ff","#00e5ff"]]},
   gold: {colors: [["#f59e0b","#fde68a"],["#d97706","#fbbf24"],["#b45309","#fcd34d"],["#fbbf24","#fff7cc"],["#92400e","#f59e0b"],["#ea580c","#fde68a"]]},
   coin: {colors: [["#b45309","#fcd34d"],["#92400e","#fde68a"],["#78350f","#fbbf24"],["#d97706","#fef3c7"],["#451a03","#f59e0b"],["#ea580c","#fde68a"]]},
   crypto: {colors: [["#0f172a","#22d3ee"],["#1e3a8a","#38bdf8"],["#0c4a6e","#67e8f9"],["#172554","#22d3ee"],["#1d4ed8","#a5f3fc"],["#082f49","#38bdf8"]]},
-  diamond: {colors: [["#e0f2fe","#ffffff"],["#bae6fd","#f0f9ff"],["#7dd3fc","#e0f2fe"],["#38bdf8","#ffffff"],["#a5f3fc","#f0f9ff"],["#67e8f9","#ffffff"]]}
+  diamond: {colors: [["#e0f2fe","#ffffff"],["#bae6fd","#f0f9ff"],["#7dd3fc","#e0f2fe"],["#38bdf8","#ffffff"],["#a5f3fc","#f0f9ff"],["#67e8f9","#ffffff"]]}, 
+  neonpink: {glow:true, colors: [["#ff2fd6","#ff7ae2"],["#f472b6","#ff2fd6"],["#ec4899","#f9a8d4"],["#db2777","#ff2fd6"],["#be185d","#f472b6"],["#ff5ce1","#ff9de2"]]},
+  neonlime: {glow:true, colors: [["#39ff6a","#a3e635"],["#4ade80","#39ff6a"],["#22c55e","#86efac"],["#16a34a","#4ade80"],["#84cc16","#bef264"],["#00ff88","#a3e635"]]},
+  neonpurple: {glow:true, colors: [["#b967ff","#7b2fff"],["#a78bfa","#b967ff"],["#8b5cf6","#c4b5fd"],["#7c3aed","#a78bfa"],["#6d28d9","#b967ff"],["#c084fc","#e9d5ff"]]},
+  neonorange: {glow:true, colors: [["#ff7b00","#ffb347"],["#f97316","#fdba74"],["#ea580c","#ff7b00"],["#ff6b35","#ff9f43"],["#ff8c00","#ffd166"],["#ff5e00","#ffb347"]]},
+  neonice: {glow:true, colors: [["#00e5ff","#a5f3fc"],["#22d3ee","#00e5ff"],["#06b6d4","#67e8f9"],["#0891b2","#22d3ee"],["#0ea5e9","#a5f3fc"],["#38bdf8","#e0f2fe"]]},
+  neonlava: {glow:true, colors: [["#ff2d55","#ff6b81"],["#ef4444","#ff2d55"],["#dc2626","#fca5a5"],["#f43f5e","#fb7185"],["#e11d48","#ff2d55"],["#ff4d6d","#fecdd3"]]},
+  neonvolt: {glow:true, colors: [["#ffe600","#fff176"],["#facc15","#ffe600"],["#eab308","#fde047"],["#ca8a04","#facc15"],["#fde047","#fef08a"],["#fff200","#fff9c4"]]},
+  neonturq: {glow:true, colors: [["#00ffa3","#5eead4"],["#2dd4bf","#00ffa3"],["#14b8a6","#99f6e4"],["#0d9488","#2dd4bf"],["#0f766e","#00ffa3"],["#34d399","#a7f3d0"]]},
+  neonrainbow: {glow:true, colors: [["#ff2fd6","#ff7ae2"],["#ff7b00","#ffb347"],["#ffe600","#fff176"],["#39ff6a","#a3e635"],["#00e5ff","#a5f3fc"],["#b967ff","#7b2fff"]]},
+  neongalaxy: {glow:true, colors: [["#7b2fff","#ff2fd6"],["#4c1d95","#b967ff"],["#1e1b4b","#00e5ff"],["#831843","#ff2fd6"],["#312e81","#a78bfa"],["#0f172a","#ff7ae2"]]}
 };
 /* ---------- tienda: aspectos comprables con CDAGO ---------- */
+/* v1.4.21: skins neón por anuncios — 5 anuncios recompensados = 7 días de uso.
+   El progreso se guarda (se ve 1 anuncio cuando se quiera); al vencer, se ve anuncios otra vez. */
+const RENTAL_SKINS = ["neonpink","neonlime","neonpurple","neonorange","neonice","neonlava","neonvolt","neonturq","neonrainbow","neongalaxy"];
+const RENTAL_ADS_NEEDED = 5;
+const RENTAL_DAYS = 7;
 const SHOP_SKINS = [
   {id:"coin", price:500},
   {id:"crypto", price:1000},
@@ -809,6 +833,7 @@ const state = {
   bombs: new Set(),       // claves r*8+c de celdas bomba en el tablero
   balance: 0,             // CDAGO ganados, saldo gastable en la tienda
   shop: {owned: []},      // aspectos de la tienda comprados
+  rentals: {},           // skins neón por anuncios (v1.4.21): id -> {ads, until}
   spin: {last: null},     // fecha del último giro de ruleta
   bestTimed: 0,
   stats: {gamesPlayed:0, totalLines:0, bestCombo:0, totalScore:0, dailyDone:0, achievements:[]}
@@ -820,7 +845,7 @@ const $ = id => document.getElementById(id);
 const I18N = {
   es: {
     points:"Puntos", best:"Récord",
-    footer:'Coloca las piezas, completa filas o columnas y gana CDAGO.<br>Modo infinito — ¡juega sin parar! · v1.4.18',
+    footer:'Coloca las piezas, completa filas o columnas y gana CDAGO.<br>Modo infinito — ¡juega sin parar! · v1.4.22',
     menuSub:'El rompecabezas de bloques de <b style="color:#fff">CoinDago</b>.<br>Arrastra las piezas al tablero, completa líneas y gana <b style="color:#22d3ee">CDAGO</b>.',
     play:"Jugar", options:"Opciones", howTo:"Cómo jugar",
     menuHint:"Sin internet · Modo infinito · Música original",
@@ -878,12 +903,26 @@ const I18N = {
     skinCoin:"Moneda", skinCoinDesc:"Cubitos dorados con estilo de moneda",
     skinCrypto:"Cripto", skinCryptoDesc:"Azul marino con circuitos cian brillantes",
     skinDiamond:"Diamante", skinDiamondDesc:"Gemas blancas y cian brillantes",
+    skinNeonpink:"Rosa Neón", skinNeonpinkDesc:"Rosa neón brillante con pulso de luz",
+    skinNeonlime:"Verde Lima", skinNeonlimeDesc:"Verde lima eléctrico con brillo",
+    skinNeonpurple:"Morado Eléctrico", skinNeonpurpleDesc:"Morado eléctrico con brillo",
+    skinNeonorange:"Naranja Fuego", skinNeonorangeDesc:"Naranja fuego con brillo",
+    skinNeonice:"Azul Hielo", skinNeoniceDesc:"Azul hielo brillante con pulso",
+    skinNeonlava:"Rojo Lava", skinNeonlavaDesc:"Rojo lava intenso con brillo",
+    skinNeonvolt:"Amarillo Volt", skinNeonvoltDesc:"Amarillo volt con brillo eléctrico",
+    skinNeonturq:"Turquesa", skinNeonturqDesc:"Turquesa brillante con pulso",
+    skinNeonrainbow:"Arcoíris", skinNeonrainbowDesc:"Todos los colores del arcoíris",
+    skinNeongalaxy:"Galaxia", skinNeongalaxyDesc:"Púrpura galáctico con estrellas",
+    watchAd:"Ver anuncio", adsProgress:"{n}/5 anuncios", skinActiveDays:"Activo · {n} días",
+    skinUnlocked7Days:"¡Skin desbloqueada por 7 días!", adWatchedProgress:"Anuncio visto: {n}/5",
+    noAdAvailable:"No hay anuncio disponible, intenta luego", adsOnlyInApp:"Los anuncios están en la app",
+    rentalSkinsTitle:"Skins neón por anuncios",
     shareImg:"Compartir imagen", shareSaved:"Imagen guardada", shareCopied:"Texto copiado",
     bombBlast:"¡Bomba!"
   },
   en: {
     points:"Points", best:"Best",
-    footer:'Place the pieces, complete rows or columns and earn CDAGO.<br>Endless mode — play forever! · v1.4.18',
+    footer:'Place the pieces, complete rows or columns and earn CDAGO.<br>Endless mode — play forever! · v1.4.22',
     menuSub:'The CoinDago block puzzle.<br>Drag the pieces onto the board, complete lines and earn <b style="color:#22d3ee">CDAGO</b>.',
     play:"Play", options:"Options", howTo:"How to play",
     menuHint:"No internet · Endless mode · Original music",
@@ -941,6 +980,20 @@ const I18N = {
     skinCoin:"Coin", skinCoinDesc:"Gold coin style blocks",
     skinCrypto:"Crypto", skinCryptoDesc:"Dark navy with glowing cyan circuits",
     skinDiamond:"Diamond", skinDiamondDesc:"Bright white and cyan gems",
+    skinNeonpink:"Neon Pink", skinNeonpinkDesc:"Bright neon pink with a light pulse",
+    skinNeonlime:"Lime Green", skinNeonlimeDesc:"Electric lime green with glow",
+    skinNeonpurple:"Electric Purple", skinNeonpurpleDesc:"Electric purple with glow",
+    skinNeonorange:"Fire Orange", skinNeonorangeDesc:"Fire orange with glow",
+    skinNeonice:"Ice Blue", skinNeoniceDesc:"Bright ice blue with a pulse",
+    skinNeonlava:"Lava Red", skinNeonlavaDesc:"Intense lava red with glow",
+    skinNeonvolt:"Volt Yellow", skinNeonvoltDesc:"Volt yellow with electric glow",
+    skinNeonturq:"Turquoise", skinNeonturqDesc:"Bright turquoise with a pulse",
+    skinNeonrainbow:"Rainbow", skinNeonrainbowDesc:"Every color of the rainbow",
+    skinNeongalaxy:"Galaxy", skinNeongalaxyDesc:"Galactic purple with stars",
+    watchAd:"Watch ad", adsProgress:"{n}/5 ads", skinActiveDays:"Active · {n} days",
+    skinUnlocked7Days:"Skin unlocked for 7 days!", adWatchedProgress:"Ad watched: {n}/5",
+    noAdAvailable:"No ad available, try again later", adsOnlyInApp:"Ads are in the app version",
+    rentalSkinsTitle:"Neon skins for ads",
     shareImg:"Share image", shareSaved:"Image saved", shareCopied:"Text copied",
     bombBlast:"Bomb!"
   }
@@ -962,7 +1015,7 @@ function loadSettings(){
     const mo = localStorage.getItem("dagoBlocksMode");
     if(mo === "endless" || mo === "timed") state.mode = mo;
     const sk = localStorage.getItem("dagoBlocksSkin");
-    const validSkins = ["default", "neon", "gold", "coin", "crypto", "diamond"];
+    const validSkins = ["default", "neon", "gold", "coin", "crypto", "diamond"].concat(RENTAL_SKINS);
     if(validSkins.indexOf(sk) !== -1){
       if((sk === "coin" || sk === "crypto" || sk === "diamond") && state.shop.owned.indexOf(sk) === -1) state.skin = "default";
       else state.skin = sk;
@@ -1288,7 +1341,7 @@ function renderBoard(){
       d.innerHTML = '<svg class="ic"><use href="#ic-rock"/></svg>';
     } else if(col!==null){
       d.classList.add("filled");
-      if(state.skin!=="default") d.classList.add("skin-"+state.skin);
+      if(state.skin!=="default"){ d.classList.add("skin-"+state.skin); if(SKINS[state.skin] && SKINS[state.skin].glow) d.classList.add("skin-glow"); }
       const p = pal()[col];
       d.style.setProperty("--c1", p[0]);
       d.style.setProperty("--c2", p[1]);
@@ -1314,7 +1367,7 @@ function renderTray(){
         const cell = document.createElement("div");
         const filled = shape.cells.some(([sr,sc])=>sr===r&&sc===c);
         cell.className = "pcell" + (filled ? "" : " empty");
-        if(filled){ cell.style.setProperty("--c1", pcol[0]); cell.style.setProperty("--c2", pcol[1]); if(state.skin!=="default") cell.classList.add("skin-"+state.skin); if(shape.bomb && shape.bomb[0]===r && shape.bomb[1]===c){ cell.classList.add("bomb-cell"); cell.innerHTML = '<svg class="ic"><use href="#ic-bomb"/></svg>'; } }
+        if(filled){ cell.style.setProperty("--c1", pcol[0]); cell.style.setProperty("--c2", pcol[1]); if(state.skin!=="default"){ cell.classList.add("skin-"+state.skin); if(SKINS[state.skin] && SKINS[state.skin].glow) cell.classList.add("skin-glow"); } if(shape.bomb && shape.bomb[0]===r && shape.bomb[1]===c){ cell.classList.add("bomb-cell"); cell.innerHTML = '<svg class="ic"><use href="#ic-bomb"/></svg>'; } }
         cell.dataset.r = r; cell.dataset.c = c;
         p.appendChild(cell);
       }
@@ -1400,7 +1453,7 @@ function updateGhostPiece(shape){
     if(filled){
       cell.style.setProperty("--c1", pcol[0]);
       cell.style.setProperty("--c2", pcol[1]);
-      if(state.skin!=="default") cell.classList.add("skin-"+state.skin);
+      if(state.skin!=="default"){ cell.classList.add("skin-"+state.skin); if(SKINS[state.skin] && SKINS[state.skin].glow) cell.classList.add("skin-glow"); }
     }
   }
 }
@@ -1768,6 +1821,7 @@ function skinUnlocked(id){
   if(id === "neon") return hasAchievement("score1000");
   if(id === "gold") return hasAchievement("lines10");
   if(id === "coin" || id === "crypto" || id === "diamond") return state.shop.owned.indexOf(id) !== -1;
+  if(RENTAL_SKINS.indexOf(id) !== -1) return rentalStatus(id).active;
   return false;
 }
 function updateSkinUI(){
@@ -1809,6 +1863,51 @@ function loadShop(){
 function saveShop(){
   try{ localStorage.setItem("dagoBlocksShop", JSON.stringify(state.shop)); }catch(e){}
 }
+/* ---------- alquiler de skins por anuncios (v1.4.21) ---------- */
+function loadRentals(){
+  state.rentals = {};
+  try{
+    const raw = localStorage.getItem("dagoBlocksRentals");
+    if(raw){
+      const r = JSON.parse(raw);
+      if(r && typeof r === "object"){
+        for(const id of RENTAL_SKINS){
+          const e = r[id];
+          if(e && typeof e === "object") state.rentals[id] = {ads: Math.min(RENTAL_ADS_NEEDED, Math.max(0, e.ads|0)), until: (typeof e.until === "number" && e.until > 0) ? e.until : 0};
+        }
+      }
+    }
+  }catch(e){ state.rentals = {}; }
+  pruneRentals();
+}
+function saveRentals(){
+  try{ localStorage.setItem("dagoBlocksRentals", JSON.stringify(state.rentals)); }catch(e){}
+}
+function pruneRentals(){
+  const now = Date.now();
+  for(const id of RENTAL_SKINS){
+    const r = state.rentals[id];
+    if(r && r.until && r.until <= now) delete state.rentals[id];
+  }
+}
+function rentalStatus(id){
+  const r = state.rentals[id];
+  if(!r) return {ads:0, until:0, active:false};
+  if(r.until && r.until > Date.now()) return {ads:RENTAL_ADS_NEEDED, until:r.until, active:true};
+  return {ads:r.ads|0, until:0, active:false};
+}
+function rentalDaysLeft(id){
+  const s = rentalStatus(id);
+  if(!s.active) return 0;
+  return Math.max(1, Math.ceil((s.until - Date.now()) / 864e5));
+}
+function pruneExpiredSkin(){
+  pruneRentals();
+  if(RENTAL_SKINS.indexOf(state.skin) !== -1 && !rentalStatus(state.skin).active){
+    state.skin = "default";
+    try{ localStorage.setItem("dagoBlocksSkin", state.skin); }catch(e){}
+  }
+}
 function shopPrice(id){
   const d = SHOP_SKINS.find(s=>s.id===id);
   return d ? d.price : 0;
@@ -1826,6 +1925,52 @@ function buySkin(id){
   updateShopUI();
   return true;
 }
+/* ---------- anuncios recompensados para skins (v1.4.21) ----------
+   El puente nativo (CoinDagoAds.showRewardedAd) solo existe en la app;
+   en web se avisa que los anuncios están en la app. Sin anuncio cargado
+   el juego nunca se bloquea: solo se muestra el aviso. */
+let rewardedBusy = false;
+let rewardedForSkin = null;
+function watchAdForSkin(id){
+  if(RENTAL_SKINS.indexOf(id) === -1) return;
+  if(rewardedBusy) return;
+  if(rentalStatus(id).active){ setSkin(id); updateShopUI(); return; }
+  if(typeof window === "undefined" || !window.CoinDagoAds || typeof window.CoinDagoAds.showRewardedAd !== "function"){ showToast(t("adsOnlyInApp")); return; }
+  rewardedBusy = true;
+  rewardedForSkin = id;
+  try{ window.CoinDagoAds.showRewardedAd(); }
+  catch(e){ rewardedBusy = false; rewardedForSkin = null; showToast(t("noAdAvailable")); }
+}
+window.__onRewardedEarned = function(){
+  const id = rewardedForSkin;
+  rewardedBusy = false; rewardedForSkin = null;
+  if(!id || RENTAL_SKINS.indexOf(id) === -1) return;
+  const r = state.rentals[id] || {ads:0, until:0};
+  r.ads = (r.ads|0) + 1;
+  if(r.ads >= RENTAL_ADS_NEEDED){
+    r.ads = 0;
+    r.until = Date.now() + RENTAL_DAYS * 864e5;
+    state.rentals[id] = r;
+    saveRentals();
+    showToast(t("skinUnlocked7Days"));
+    if(typeof sfxDailyDone === "function") sfxDailyDone();
+    setSkin(id);
+  } else {
+    state.rentals[id] = r;
+    saveRentals();
+    showToast(t("adWatchedProgress").replace("{n}", String(r.ads)));
+  }
+  updateShopUI(); updateSkinUI();
+};
+window.__onRewardedFailed = function(){
+  rewardedBusy = false; rewardedForSkin = null;
+  showToast(t("noAdAvailable"));
+  updateShopUI();
+};
+window.__onRewardedClosed = function(){
+  rewardedBusy = false; rewardedForSkin = null;
+  updateShopUI();
+};
 function updateShopUI(){
   const bal = $("shopBalance");
   if(bal) bal.textContent = fmt(state.balance) + " CDAGO";
@@ -1872,6 +2017,53 @@ function updateShopUI(){
       btn.innerHTML = '<svg class="ic"><use href="#ic-lock"/></svg> ' + btn.textContent;
       btn.disabled = state.balance < def.price;
       btn.addEventListener("click", ()=>{ buySkin(def.id); });
+    }
+    row.appendChild(btn);
+    list.appendChild(row);
+  }
+  const rh = document.createElement("div");
+  rh.classList.add("shop-section");
+  rh.textContent = t("rentalSkinsTitle");
+  list.appendChild(rh);
+  for(const id of RENTAL_SKINS){
+    const st = rentalStatus(id);
+    const equipped = state.skin === id;
+    const row = document.createElement("div");
+    row.classList.add("shop-card");
+    const prev = document.createElement("div");
+    prev.classList.add("shop-preview");
+    for(let i=0;i<4;i++){
+      const b = document.createElement("div");
+      b.className = "shop-block skin-glow";
+      const p = SKINS[id].colors[i % SKINS[id].colors.length];
+      b.style.setProperty("--c1", p[0]);
+      b.style.setProperty("--c2", p[1]);
+      prev.appendChild(b);
+    }
+    row.appendChild(prev);
+    const tx = document.createElement("div");
+    tx.classList.add("shop-info");
+    const cap = id.charAt(0).toUpperCase() + id.slice(1);
+    const nm = document.createElement("div");
+    nm.classList.add("shop-name");
+    nm.textContent = t("skin" + cap);
+    const ds = document.createElement("div");
+    ds.classList.add("shop-desc");
+    ds.textContent = t("skin" + cap + "Desc");
+    const pr = document.createElement("div");
+    pr.classList.add("shop-price");
+    pr.textContent = st.active ? t("skinActiveDays").replace("{n}", String(rentalDaysLeft(id))) : t("adsProgress").replace("{n}", String(st.ads));
+    tx.appendChild(nm); tx.appendChild(ds); tx.appendChild(pr);
+    row.appendChild(tx);
+    const btn = document.createElement("button");
+    btn.classList.add("shop-btn");
+    btn.dataset.skin = id;
+    if(equipped){ btn.textContent = t("equipped"); btn.disabled = true; }
+    else if(st.active){ btn.textContent = t("equip"); btn.disabled = false; btn.addEventListener("click", ()=>{ setSkin(id); updateShopUI(); }); }
+    else{
+      btn.textContent = t("watchAd") + " " + st.ads + "/" + RENTAL_ADS_NEEDED;
+      btn.disabled = rewardedBusy;
+      btn.addEventListener("click", ()=>{ watchAdForSkin(id); });
     }
     row.appendChild(btn);
     list.appendChild(row);
@@ -3335,9 +3527,11 @@ boardEl.addEventListener("click", onBoardClick);
 /* ---------- init ---------- */
 loadBest();
 loadShop();
+loadRentals();
 loadBalance();
 loadSpin();
 loadSettings();
+pruneExpiredSkin();
 loadStats();
 loadDailyChallenge();
 loadStreak();
@@ -3374,7 +3568,7 @@ applyLanguage();
 const INTRO_MS = 2100; /* v1.4.18: duracion total de la intro */
 const INTRO_BLOCKS = 44; /* v1.4.18: bloques de la explosion */
 const INTRO_SPARKS = 150; /* v1.4.18: chispas de la explosion */
-const INTRO_POP_MS = 900; /* v1.4.18: el logo entra a los 900ms */
+const INTRO_POP_MS = 650; /* v1.4.19: el logo entra a los 650ms (antes 900): la intro se siente mas rapida y el pulso del logo si se alcanza a ver */
 const INTRO_FADE_MS = 1800; /* v1.4.18: el overlay empieza a desvanecerse */
 const INTRO_BLOCK_COLORS = ["#2563eb", "#3b82f6", "#22d3ee", "#60a5fa", "#7dd3fc", "#ffffff"];
 const INTRO_BLOCK_LIGHT = ["#93c5fd", "#bfdbfe", "#a5f3fc", "#bae6fd", "#e0f2fe", "#ffffff"];
